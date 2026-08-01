@@ -874,6 +874,59 @@ header h1 {
   margin-bottom: 2px;
 }
 
+.recent-changes {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+
+.recent-changes-heading {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #8a7256;
+  text-transform: uppercase;
+}
+
+.change-log-compact {
+  gap: 10px;
+}
+
+.change-log-compact .change-log-day {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.change-log-compact .change-log-date {
+  margin: 0 0 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #8a7256;
+}
+
+.change-log-compact .change-log-entry {
+  padding: 4px 0;
+  border-top: none;
+}
+
+.change-log-compact .change-log-entry-header {
+  gap: 0;
+}
+
+.change-log-compact .change-log-entry-header .delete-btn {
+  margin-left: auto;
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+.change-log-compact .change-log-lines {
+  font-size: 0.8rem;
+  color: #6b5a42;
+  padding-left: 16px;
+}
+
 .entry-photos img {
   width: 100px;
   height: 100px;

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { COLOR_PALETTE, HIVE_CATEGORIES } from "./types";
+import { COLOR_PALETTE, HIVE_CATEGORIES, Entry, HiveInfo } from "./types";
 import QueenColorField from "./QueenColorField";
+import StockChangeList from "./StockChangeList";
 
 export interface SightingsPatch {
   sightingQueen?: boolean;
@@ -27,6 +28,8 @@ interface Props {
   occupiedCombs?: number | null;
   queenCells?: number | null;
   varroaMites?: boolean | null;
+  recentChanges?: Entry[];
+  onDeleteChange?: (id: number) => void;
   onPickColor: (color: string | null) => void;
   onRename: (name: string | null) => void;
   onCategoryChange: (category: string | null) => void;
@@ -51,6 +54,8 @@ export default function ColorPicker({
   occupiedCombs,
   queenCells,
   varroaMites,
+  recentChanges,
+  onDeleteChange,
   onPickColor,
   onRename,
   onCategoryChange,
@@ -277,6 +282,19 @@ export default function ColorPicker({
             </select>
           </label>
         </div>
+      </div>
+
+      <div className="recent-changes">
+        <h3 className="recent-changes-heading">Letzte Änderungen</h3>
+        <StockChangeList
+          entries={recentChanges || []}
+          loading={false}
+          onDelete={onDeleteChange || (() => {})}
+          hiveInfo={{} as Record<number, HiveInfo>}
+          hideHiveBadge
+          compact
+          emptyMessage="Noch keine Änderungen."
+        />
       </div>
     </div>
   );

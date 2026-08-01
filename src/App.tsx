@@ -3,7 +3,6 @@ import { Entry, HiveInfo, HIVES, getQueenColorForYear } from "./types";
 import NewEntryForm from "./NewEntryForm";
 import EntryList from "./EntryList";
 import ColorPicker from "./ColorPicker";
-import StockChangeList from "./StockChangeList";
 import YearlyHarvest from "./YearlyHarvest";
 import UserPicker from "./UserPicker";
 import { CurrentUser, getStoredUser, clearStoredUser } from "./userSession";
@@ -93,7 +92,6 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [pendingCount, setPendingCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
-  const [entryTab, setEntryTab] = useState<"diary" | "changes">("diary");
 
   const loadEntries = useCallback(async () => {
     if (selectedHive === "harvest") {
@@ -361,6 +359,10 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
           occupiedCombs={selectedInfo?.occupiedCombs}
           queenCells={selectedInfo?.queenCells}
           varroaMites={selectedInfo?.varroaMites}
+          recentChanges={entries
+            .filter((e) => e.hive === selectedHive && e.notes?.startsWith(STOCK_CHANGE_PREFIX))
+            .slice(0, 5)}
+          onDeleteChange={handleDelete}
           onPickColor={(color) => handleUpdateHive(selectedHive, { color })}
           onRename={(name) => handleUpdateHive(selectedHive, { name })}
           onCategoryChange={(category) => handleUpdateHive(selectedHive, { category })}
@@ -393,39 +395,15 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
               />
             )}
             <section>
-              <div className="entry-tabs">
-                <button
-                  type="button"
-                  className={entryTab === "diary" ? "active" : ""}
-                  onClick={() => setEntryTab("diary")}
-                >
-                  Tageseinträge
-                </button>
-                <button
-                  type="button"
-                  className={entryTab === "changes" ? "active" : ""}
-                  onClick={() => setEntryTab("changes")}
-                >
-                  Änderungen in den Stammdaten
-                </button>
-              </div>
-              {entryTab === "changes" ? (
-                <StockChangeList
-                  entries={entries.filter((e) => e.notes?.startsWith(STOCK_CHANGE_PREFIX))}
-                  loading={loading}
-                  onDelete={handleDelete}
-                  hiveInfo={hiveInfo}
-                />
-              ) : (
-                <EntryList
-                  entries={entries.filter((e) => !e.notes?.startsWith(STOCK_CHANGE_PREFIX))}
-                  loading={loading}
-                  userId={user.id}
-                  onDelete={handleDelete}
-                  onUpdated={loadEntries}
-                  hiveInfo={hiveInfo}
-                />
-              )}
+              <h2>Tageseinträge</h2>
+              <EntryList
+                entries={entries.filter((e) => !e.notes?.startsWith(STOCK_CHANGE_PREFIX))}
+                loading={loading}
+                userId={user.id}
+                onDelete={handleDelete}
+                onUpdated={loadEntries}
+                hiveInfo={hiveInfo}
+              />
             </section>
           </>
         )}

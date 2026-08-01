@@ -6,6 +6,9 @@ interface Props {
   loading: boolean;
   onDelete: (id: number) => void;
   hiveInfo: Record<number, HiveInfo>;
+  hideHiveBadge?: boolean;
+  compact?: boolean;
+  emptyMessage?: string;
 }
 
 function formatDate(d: string) {
@@ -14,9 +17,17 @@ function formatDate(d: string) {
 
 // Zeigt Stammdaten-Änderungen kompakt gruppiert nach Tag an, statt als volle Eintragskarten -
 // an einem Tag können mehrere Stöcke geändert worden sein, das soll auf einen Blick lesbar sein.
-export default function StockChangeList({ entries, loading, onDelete, hiveInfo }: Props) {
+export default function StockChangeList({
+  entries,
+  loading,
+  onDelete,
+  hiveInfo,
+  hideHiveBadge,
+  compact,
+  emptyMessage,
+}: Props) {
   if (loading) return <p className="muted">Lade Änderungen…</p>;
-  if (entries.length === 0) return <p className="muted">Noch keine Änderungen an den Stammdaten.</p>;
+  if (entries.length === 0) return <p className="muted">{emptyMessage || "Noch keine Änderungen an den Stammdaten."}</p>;
 
   const groups: { date: string; entries: Entry[] }[] = [];
   for (const entry of entries) {
@@ -29,7 +40,7 @@ export default function StockChangeList({ entries, loading, onDelete, hiveInfo }
   }
 
   return (
-    <div className="change-log">
+    <div className={`change-log ${compact ? "change-log-compact" : ""}`}>
       {groups.map((group) => (
         <div className="change-log-day" key={group.date}>
           <h3 className="change-log-date">{formatDate(group.date)}</h3>
@@ -47,9 +58,11 @@ export default function StockChangeList({ entries, loading, onDelete, hiveInfo }
             return (
               <div className="change-log-entry" key={entry.id}>
                 <div className="change-log-entry-header">
-                  <span className="hive-badge" style={badgeStyle}>
-                    {hiveLabel}
-                  </span>
+                  {!hideHiveBadge && (
+                    <span className="hive-badge" style={badgeStyle}>
+                      {hiveLabel}
+                    </span>
+                  )}
                   <button className="delete-btn" onClick={() => onDelete(entry.id)} title="Löschen">
                     ✕
                   </button>
