@@ -62,8 +62,8 @@ export default async (req: Request, context: Context) => {
     if (!userId) {
       return new Response("userId ist erforderlich", { status: 400 });
     }
-    if (!hive || hive < 1 || hive > 10 || !entryDate) {
-      return new Response("hive (1-10) und entryDate sind erforderlich", { status: 400 });
+    if (!hive || hive < 1 || hive > 60 || !entryDate) {
+      return new Response("hive (1-60) und entryDate sind erforderlich", { status: 400 });
     }
 
     const photos = form.getAll("photos").filter((p): p is File => p instanceof File && p.size > 0);

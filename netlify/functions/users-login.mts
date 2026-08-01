@@ -20,12 +20,12 @@ export default async (req: Request, context: Context) => {
     return new Response("userId und 4-stelliger PIN sind erforderlich", { status: 400 });
   }
 
-  const [user] = await db.sql`SELECT id, name, pin_hash FROM users WHERE id = ${userId}`;
+  const [user] = await db.sql`SELECT id, name, pin_hash, hive_count FROM users WHERE id = ${userId}`;
   if (!user || user.pin_hash !== hashPin(pin)) {
     return new Response("Falscher PIN", { status: 401 });
   }
 
-  return Response.json({ id: user.id, name: user.name });
+  return Response.json({ id: user.id, name: user.name, hiveCount: user.hive_count });
 };
 
 export const config: Config = {

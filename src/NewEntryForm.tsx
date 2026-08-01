@@ -11,7 +11,6 @@ interface Props {
   hiveName?: string;
   queenYear: number | null;
   colonyStrength: string | null;
-  weightKg: number | null;
   onCreated: () => void;
 }
 
@@ -33,7 +32,6 @@ export default function NewEntryForm({
   hiveName,
   queenYear,
   colonyStrength,
-  weightKg,
   onCreated,
 }: Props) {
   const [entryDate, setEntryDate] = useState(today());
@@ -48,12 +46,19 @@ export default function NewEntryForm({
   const [occupiedCombs, setOccupiedCombs] = useState("");
   const [queenCells, setQueenCells] = useState("");
   const [varroaMites, setVarroaMites] = useState<"" | "ja" | "nein">("");
+  const [weightKg, setWeightKg] = useState("");
   const [photos, setPhotos] = useState<FileList | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
+  const [flying, setFlying] = useState(false);
 
   const queenColorInfo = getQueenColorForYear(queenYear);
+
+  function triggerBeeFlight() {
+    setFlying(true);
+    setTimeout(() => setFlying(false), 1300);
+  }
 
   function resetForm() {
     setEntryDate(today());
@@ -68,6 +73,7 @@ export default function NewEntryForm({
     setOccupiedCombs("");
     setQueenCells("");
     setVarroaMites("");
+    setWeightKg("");
     setPhotos(null);
     (document.getElementById("photo-input") as HTMLInputElement | null)?.value &&
       ((document.getElementById("photo-input") as HTMLInputElement).value = "");
@@ -92,7 +98,7 @@ export default function NewEntryForm({
       form.set("colonyStrength", colonyStrength || "");
       form.set("varroa", varroa);
       form.set("feeding", feeding);
-      form.set("weightKg", weightKg != null ? String(weightKg) : "");
+      form.set("weightKg", weightKg);
       form.set("sightingQueen", String(sightingQueen));
       form.set("sightingLarvae", String(sightingLarvae));
       form.set("sightingEggs", String(sightingEggs));
@@ -105,6 +111,7 @@ export default function NewEntryForm({
       const res = await fetch("/api/entries", { method: "POST", body: form });
       if (!res.ok) throw new Error(await res.text());
 
+      triggerBeeFlight();
       resetForm();
       onCreated();
     } catch (err) {
@@ -121,7 +128,7 @@ export default function NewEntryForm({
             colonyStrength: colonyStrength || "",
             varroa,
             feeding,
-            weightKg: weightKg != null ? String(weightKg) : "",
+            weightKg,
             sightingQueen,
             sightingLarvae,
             sightingEggs,
@@ -132,6 +139,7 @@ export default function NewEntryForm({
             photos: photoList.map((f) => ({ name: f.name, type: f.type, blob: f })),
           });
           setInfo("Kein Internet – Eintrag wurde lokal gespeichert und wird automatisch hochgeladen, sobald du wieder online bist.");
+          triggerBeeFlight();
           resetForm();
           onCreated();
         } catch {
@@ -261,6 +269,17 @@ export default function NewEntryForm({
           />
         </label>
 
+        <label>
+          Stockgewicht (kg)
+          <input
+            type="number"
+            step="0.1"
+            min="0"
+            placeholder="z.B. 24.5"
+            value={weightKg}
+            onChange={(e) => setWeightKg(e.target.value)}
+          />
+        </label>
       </div>
 
       <label className="full-width">
@@ -282,9 +301,16 @@ export default function NewEntryForm({
       {error && <p className="error">{error}</p>}
       {info && <p className="info">{info}</p>}
 
-      <button type="submit" disabled={submitting}>
-        {submitting ? "Speichere…" : "Eintrag speichern"}
-      </button>
+      <div className="submit-row">
+        <button type="submit" disabled={submitting}>
+          {submitting ? "Speichere…" : "Eintrag speichern"}
+        </button>
+        {flying && (
+          <span className="flying-bee" aria-hidden="true">
+            🐝
+          </span>
+        )}
+      </div>
     </form>
   );
 }

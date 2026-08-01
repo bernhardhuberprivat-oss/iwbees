@@ -38,10 +38,33 @@ export default async (req: Request, context: Context) => {
 
     const [user] = await db.sql`
       INSERT INTO users (name, pin_hash) VALUES (${name}, ${hashPin(pin)})
-      RETURNING id, name
+      RETURNING id, name, hive_count
     `;
 
-    return Response.json(user, { status: 201 });
+    return Response.json({ id: user.id, name: user.name, hiveCount: user.hive_count }, { status: 201 });
+  }
+
+  if (req.method === "PUT") {
+    const body = await req.json();
+    const userId = Number(body.userId);
+    const hiveCount = Number(body.hiveCount);
+
+    if (!userId) {
+      return new Response("userId ist erforderlich", { status: 400 });
+    }
+    if (!hiveCount || !Number.isInteger(hiveCount) || hiveCount < 1 || hiveCount > 60) {
+      return new Response("hiveCount muss eine Ganzzahl zwischen 1 und 60 sein", { status: 400 });
+    }
+
+    const [user] = await db.sql`
+      UPDATE users SET hive_count = ${hiveCount} WHERE id = ${userId}
+      RETURNING id, name, hive_count
+    `;
+    if (!user) {
+      return new Response("Nutzer nicht gefunden", { status: 404 });
+    }
+
+    return Response.json({ id: user.id, name: user.name, hiveCount: user.hive_count });
   }
 
   if (req.method === "DELETE") {
@@ -72,6 +95,7 @@ export default async (req: Request, context: Context) => {
     await db.sql`DELETE FROM entries WHERE user_id = ${userId}`;
     await db.sql`DELETE FROM hive_colors WHERE user_id = ${userId}`;
     await db.sql`DELETE FROM annual_harvest WHERE user_id = ${userId}`;
+    await db.sql`DELETE FROM harvest_entries WHERE user_id = ${userId}`;
     await db.sql`DELETE FROM users WHERE id = ${userId}`;
 
     return new Response(null, { status: 204 });

@@ -4,6 +4,7 @@
 export interface CurrentUser {
   id: number;
   name: string;
+  hiveCount?: number;
 }
 
 const KEY = "bienentagebuch:currentUser";

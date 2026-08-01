@@ -10,8 +10,8 @@ interface Props {
   currentCategory?: string | null;
   currentQueenYear?: number | null;
   currentColonyStrength?: string | null;
-  currentWeightKg?: number | null;
   varroaMitesActive?: boolean;
+  latestWeightKg?: number | null;
   recentChanges?: Entry[];
   onDeleteChange?: (id: number) => void;
   onPickColor: (color: string | null) => void;
@@ -19,7 +19,6 @@ interface Props {
   onCategoryChange: (category: string | null) => void;
   onQueenYearChange: (year: number | null) => void;
   onColonyStrengthChange: (value: string | null) => void;
-  onWeightChange: (value: number | null) => void;
 }
 
 export default function ColorPicker({
@@ -29,8 +28,8 @@ export default function ColorPicker({
   currentCategory,
   currentQueenYear,
   currentColonyStrength,
-  currentWeightKg,
   varroaMitesActive,
+  latestWeightKg,
   recentChanges,
   onDeleteChange,
   onPickColor,
@@ -38,31 +37,18 @@ export default function ColorPicker({
   onCategoryChange,
   onQueenYearChange,
   onColonyStrengthChange,
-  onWeightChange,
 }: Props) {
   const [name, setName] = useState(currentName || "");
-  const [weightInput, setWeightInput] = useState(currentWeightKg != null ? String(currentWeightKg) : "");
   const [showRecentChanges, setShowRecentChanges] = useState(false);
 
   useEffect(() => {
     setName(currentName || "");
   }, [hive, currentName]);
 
-  useEffect(() => {
-    setWeightInput(currentWeightKg != null ? String(currentWeightKg) : "");
-  }, [hive, currentWeightKg]);
-
   function commitName() {
     const trimmed = name.trim();
     if (trimmed !== (currentName || "")) {
       onRename(trimmed || null);
-    }
-  }
-
-  function commitWeight() {
-    const value = weightInput.trim() === "" ? null : Number(weightInput);
-    if (value !== (currentWeightKg ?? null)) {
-      onWeightChange(value);
     }
   }
 
@@ -117,29 +103,23 @@ export default function ColorPicker({
         </select>
       </label>
 
-      <label className="hive-weight-field">
-        <span className="color-picker-label">Stockgewicht (kg):</span>
-        <input
-          type="number"
-          step="0.1"
-          min="0"
-          placeholder="z.B. 24.5"
-          value={weightInput}
-          onChange={(e) => setWeightInput(e.target.value)}
-          onBlur={commitWeight}
-        />
-      </label>
-
       <div className="hive-queen-field">
         <span className="color-picker-label">Königin (Zuchtjahr):</span>
         <QueenColorField value={currentQueenYear ?? null} onChange={onQueenYearChange} />
       </div>
 
-      {varroaMitesActive && (
-        <div className="varroa-status-badge" title="Wird im Tageseintrag erfasst, verschwindet automatisch bei Varroamilben = Nein">
-          🔬 Varroamilben: Ja
-        </div>
-      )}
+      <div className="status-badges">
+        {varroaMitesActive && (
+          <div className="varroa-status-badge" title="Wird im Tageseintrag erfasst, verschwindet automatisch bei Varroamilben = Nein">
+            🔬 Varroamilben: Ja
+          </div>
+        )}
+        {latestWeightKg != null && (
+          <div className="weight-status-badge" title="Wird im Tageseintrag erfasst, bleibt bis zu einem neuen Wert stehen">
+            ⚖️ Stockgewicht: {latestWeightKg} kg
+          </div>
+        )}
+      </div>
 
       <div className="color-swatch-row">
         <span className="color-picker-label">Stock {hive} markieren:</span>

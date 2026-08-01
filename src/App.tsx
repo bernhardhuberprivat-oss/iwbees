@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
-import { Entry, HiveInfo, HIVES, getQueenColorForYear } from "./types";
+import { useCallback, useEffect, useState, FormEvent } from "react";
+import { Entry, HiveInfo, buildHiveRange, getQueenColorForYear } from "./types";
 import NewEntryForm from "./NewEntryForm";
 import EntryList from "./EntryList";
 import ColorPicker from "./ColorPicker";
-import YearlyHarvest from "./YearlyHarvest";
+import HarvestPanel, { HarvestEntry } from "./HarvestPanel";
 import UserPicker from "./UserPicker";
-import { CurrentUser, getStoredUser, clearStoredUser } from "./userSession";
+import { CurrentUser, getStoredUser, clearStoredUser, storeUser } from "./userSession";
 import { cacheGet, cacheSet, getPendingEntries, deletePendingEntry, pendingToDisplayEntry, syncPendingEntries } from "./offline";
 import { readableTextColor } from "./colorUtils";
 
@@ -30,10 +30,6 @@ function describeStockPatch(patch: Record<string, unknown>): string[] {
     lines.push(`Königin-Zuchtjahr: ${year ? `${year}${color ? ` (${color.name})` : ""}` : "–"}`);
   }
   if ("colonyStrength" in patch) lines.push(`Volksstärke: ${patch.colonyStrength || "–"}`);
-  if ("weightKg" in patch) {
-    const v = patch.weightKg as number | null;
-    lines.push(`Stockgewicht: ${v != null ? `${v} kg` : "–"}`);
-  }
   return lines;
 }
 
@@ -69,20 +65,57 @@ interface DiaryProps {
 }
 
 function Diary({ user, onSwitchUser }: DiaryProps) {
-  const [selectedHive, setSelectedHive] = useState<number | "all" | "harvest">("all");
+  const [selectedHive, setSelectedHive] = useState<number | "all">("all");
+  const [harvestEntries, setHarvestEntries] = useState<HarvestEntry[]>([]);
+  const [harvestYearTotal, setHarvestYearTotal] = useState(0);
+  const [showHarvestPanel, setShowHarvestPanel] = useState(false);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [hiveInfo, setHiveInfo] = useState<Record<number, HiveInfo>>({});
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [pendingCount, setPendingCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
+  const [hiveCount, setHiveCount] = useState(user.hiveCount || 10);
+  const [showNewEntryForm, setShowNewEntryForm] = useState(false);
+  const [showHiveCountEditor, setShowHiveCountEditor] = useState(false);
+  const [hiveCountInput, setHiveCountInput] = useState(String(user.hiveCount || 10));
+  const [hiveCountError, setHiveCountError] = useState("");
+  const [savingHiveCount, setSavingHiveCount] = useState(false);
 
-  const loadEntries = useCallback(async () => {
-    if (selectedHive === "harvest") {
-      setEntries([]);
-      setLoading(false);
+  async function handleSaveHiveCount(e: FormEvent) {
+    e.preventDefault();
+    const next = Number(hiveCountInput);
+    if (!Number.isInteger(next) || next < 1 || next > 60) {
+      setHiveCountError("Bitte eine Zahl zwischen 1 und 60 eingeben.");
       return;
     }
+    setSavingHiveCount(true);
+    setHiveCountError("");
+    try {
+      const res = await fetch("/api/users", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, hiveCount: next }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setHiveCount(next);
+      storeUser({ ...user, hiveCount: next });
+      if (typeof selectedHive === "number" && selectedHive > next) {
+        setSelectedHive("all");
+      }
+      setShowHiveCountEditor(false);
+    } catch {
+      setHiveCountError("Speichern fehlgeschlagen. Bitte Internetverbindung prüfen.");
+    } finally {
+      setSavingHiveCount(false);
+    }
+  }
+
+  useEffect(() => {
+    setShowNewEntryForm(false);
+  }, [selectedHive]);
+
+  const loadEntries = useCallback(async () => {
     setLoading(true);
     const cacheKey = `entries:${user.id}:${selectedHive}`;
     try {
@@ -133,6 +166,17 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
     }
   }, [loadEntries]);
 
+  const loadHarvest = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/harvest-entries?userId=${user.id}&year=${new Date().getFullYear()}`);
+      const data = await res.json();
+      setHarvestEntries(data.entries || []);
+      setHarvestYearTotal(Number(data.yearTotal) || 0);
+    } catch {
+      // offline - Badge zeigt einfach den zuletzt bekannten Stand
+    }
+  }, [user.id]);
+
   useEffect(() => {
     loadEntries();
   }, [loadEntries]);
@@ -140,6 +184,10 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   useEffect(() => {
     loadHiveInfo();
   }, [loadHiveInfo]);
+
+  useEffect(() => {
+    loadHarvest();
+  }, [loadHarvest]);
 
   useEffect(() => {
     function handleOnline() {
@@ -178,7 +226,6 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       category?: string | null;
       queenYear?: number | null;
       colonyStrength?: string | null;
-      weightKg?: number | null;
     }
   ) {
     setHiveInfo((prev) => {
@@ -228,7 +275,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
         form.set("colonyStrength", info.colonyStrength || "");
         form.set("varroa", existing.varroa || "");
         form.set("feeding", existing.feeding || "");
-        form.set("weightKg", info.weightKg != null ? String(info.weightKg) : "");
+        form.set("weightKg", existing.weight_kg != null ? String(existing.weight_kg) : "");
         form.set("keepPhotoKeys", JSON.stringify(existing.photo_keys || []));
         await fetch("/api/entries", { method: "PUT", body: form });
       } else {
@@ -241,7 +288,6 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
         form.set("queenColor", queenColor || "");
         form.set("queenYear", info.queenYear ? String(info.queenYear) : "");
         form.set("colonyStrength", info.colonyStrength || "");
-        form.set("weightKg", info.weightKg != null ? String(info.weightKg) : "");
         form.set("varroa", "");
         form.set("feeding", "");
         await fetch("/api/entries", { method: "POST", body: form });
@@ -265,11 +311,55 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       : undefined;
   const varroaMitesActive = latestVarroaEntry ? !!latestVarroaEntry.varroa_mites : false;
 
+  // Zeigt im Stammdaten-Fenster den zuletzt im Tageseintrag erfassten Stockgewicht-Wert an -
+  // bleibt stehen, bis ein neuerer Eintrag einen neuen Wert setzt. Rein abgeleitet, hier
+  // nicht editierbar (nur im Tageseintrag).
+  const latestWeightEntry =
+    typeof selectedHive === "number"
+      ? entries.find((e) => e.hive === selectedHive && e.weight_kg !== null && e.weight_kg !== undefined)
+      : undefined;
+  const latestWeightKg = latestWeightEntry ? Number(latestWeightEntry.weight_kg) : null;
+
   return (
     <div className="app">
       <header>
         <h1>🐝 Bienentagebuch</h1>
-        <p className="subtitle">Kontrollen für deine 10 Bienenstöcke</p>
+        <p className="subtitle">Kontrollen für deine {hiveCount} Bienenstöcke</p>
+        <button
+          type="button"
+          className="hive-count-toggle"
+          onClick={() => {
+            setHiveCountInput(String(hiveCount));
+            setHiveCountError("");
+            setShowHiveCountEditor((v) => !v);
+          }}
+        >
+          Anzahl Bienenstöcke ändern
+        </button>
+        {showHiveCountEditor && (
+          <form className="hive-count-editor" onSubmit={handleSaveHiveCount}>
+            <label>
+              Anzahl Bienenstöcke
+              <input
+                type="number"
+                min={1}
+                max={60}
+                value={hiveCountInput}
+                onChange={(e) => setHiveCountInput(e.target.value)}
+                autoFocus
+              />
+            </label>
+            {hiveCountError && <p className="error">{hiveCountError}</p>}
+            <div className="hive-count-editor-actions">
+              <button type="button" className="secondary" onClick={() => setShowHiveCountEditor(false)}>
+                Abbrechen
+              </button>
+              <button type="submit" disabled={savingHiveCount}>
+                {savingHiveCount ? "Speichere…" : "Speichern"}
+              </button>
+            </div>
+          </form>
+        )}
       </header>
 
       <div className="user-bar">
@@ -300,7 +390,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
         >
           Alle
         </button>
-        {HIVES.map((h) => {
+        {buildHiveRange(hiveCount).map((h) => {
           const info = hiveInfo[h];
           const color = info?.color;
           const label = info?.name?.trim() || `Stock ${h}`;
@@ -321,13 +411,26 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
             </button>
           );
         })}
-        <button
-          className={`harvest-tab ${selectedHive === "harvest" ? "active" : ""}`}
-          onClick={() => setSelectedHive("harvest")}
-        >
-          🍯 Ertrag
-        </button>
       </nav>
+
+      <div className="harvest-bar">
+        <button type="button" className="harvest-open-btn" onClick={() => setShowHarvestPanel(true)}>
+          🍯 Ertrag eingeben
+        </button>
+        <span className="harvest-year-badge">
+          🍯 {harvestYearTotal} kg ({new Date().getFullYear()})
+        </span>
+      </div>
+
+      {showHarvestPanel && (
+        <HarvestPanel
+          userId={user.id}
+          entries={harvestEntries}
+          onSaved={loadHarvest}
+          onDeleted={loadHarvest}
+          onClose={() => setShowHarvestPanel(false)}
+        />
+      )}
 
       {typeof selectedHive === "number" && (
         <ColorPicker
@@ -337,8 +440,8 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
           currentCategory={selectedInfo?.category}
           currentQueenYear={selectedInfo?.queenYear}
           currentColonyStrength={selectedInfo?.colonyStrength}
-          currentWeightKg={selectedInfo?.weightKg}
           varroaMitesActive={varroaMitesActive}
+          latestWeightKg={latestWeightKg}
           recentChanges={entries
             .filter((e) => e.hive === selectedHive && e.notes?.startsWith(STOCK_CHANGE_PREFIX))
             .slice(0, 5)}
@@ -348,43 +451,49 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
           onCategoryChange={(category) => handleUpdateHive(selectedHive, { category })}
           onQueenYearChange={(queenYear) => handleUpdateHive(selectedHive, { queenYear })}
           onColonyStrengthChange={(colonyStrength) => handleUpdateHive(selectedHive, { colonyStrength })}
-          onWeightChange={(weightKg) => handleUpdateHive(selectedHive, { weightKg })}
         />
       )}
 
       <main>
-        {selectedHive === "harvest" ? (
-          <YearlyHarvest userId={user.id} />
-        ) : (
-          <>
-            {selectedHive === "all" ? (
-              <p className="muted hint">Wähle oben einen Stock aus, um einen neuen Eintrag anzulegen.</p>
-            ) : (
-              <NewEntryForm
-                key={selectedHive}
-                userId={user.id}
-                hive={selectedHive}
-                hiveColor={selectedInfo?.color ?? undefined}
-                hiveName={selectedInfo?.name ?? undefined}
-                queenYear={selectedInfo?.queenYear ?? null}
-                colonyStrength={selectedInfo?.colonyStrength ?? null}
-                weightKg={selectedInfo?.weightKg ?? null}
-                onCreated={loadEntries}
-              />
-            )}
-            <section>
-              <h2>Tageseinträge</h2>
-              <EntryList
-                entries={entries.filter((e) => !e.notes?.startsWith(STOCK_CHANGE_PREFIX))}
-                loading={loading}
-                userId={user.id}
-                onDelete={handleDelete}
-                onUpdated={loadEntries}
-                hiveInfo={hiveInfo}
-              />
-            </section>
-          </>
+        {selectedHive === "all" && (
+          <p className="muted hint">Wähle oben einen Stock aus, um einen neuen Eintrag anzulegen.</p>
         )}
+        <section>
+          <div className="section-heading-row">
+            <h2>Tageseinträge</h2>
+            {selectedHive !== "all" && (
+              <button
+                type="button"
+                className="new-entry-toggle"
+                onClick={() => setShowNewEntryForm((v) => !v)}
+              >
+                {showNewEntryForm ? "Neuer Tageseintrag ✕" : "+ Neuer Tageseintrag"}
+              </button>
+            )}
+          </div>
+
+          {selectedHive !== "all" && showNewEntryForm && (
+            <NewEntryForm
+              key={selectedHive}
+              userId={user.id}
+              hive={selectedHive}
+              hiveColor={selectedInfo?.color ?? undefined}
+              hiveName={selectedInfo?.name ?? undefined}
+              queenYear={selectedInfo?.queenYear ?? null}
+              colonyStrength={selectedInfo?.colonyStrength ?? null}
+              onCreated={loadEntries}
+            />
+          )}
+
+          <EntryList
+            entries={entries.filter((e) => !e.notes?.startsWith(STOCK_CHANGE_PREFIX))}
+            loading={loading}
+            userId={user.id}
+            onDelete={handleDelete}
+            onUpdated={loadEntries}
+            hiveInfo={hiveInfo}
+          />
+        </section>
       </main>
     </div>
   );

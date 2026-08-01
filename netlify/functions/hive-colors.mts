@@ -52,8 +52,8 @@ export default async (req: Request, context: Context) => {
     if (!userId) {
       return new Response("userId ist erforderlich", { status: 400 });
     }
-    if (!hive || hive < 1 || hive > 10) {
-      return new Response("hive (1-10) ist erforderlich", { status: 400 });
+    if (!hive || hive < 1 || hive > 60) {
+      return new Response("hive (1-60) ist erforderlich", { status: 400 });
     }
 
     const has = (key: string) => Object.prototype.hasOwnProperty.call(body, key);

@@ -42,7 +42,14 @@ export interface HiveInfo {
 // Kategorie des Bienenvolks im jeweiligen Stock.
 export const HIVE_CATEGORIES = ["Wirtschaftsvolk", "Ableger", "Schwarm", "Zuchtvolk", "Sonstiges"];
 
-export const HIVES = Array.from({ length: 10 }, (_, i) => i + 1);
+export const DEFAULT_HIVE_COUNT = 10;
+export const MAX_HIVE_COUNT = 60;
+
+// Erzeugt die Liste der Stocknummern 1..count - die Anzahl ist pro Nutzer einstellbar.
+export function buildHiveRange(count: number): number[] {
+  const safeCount = Math.min(MAX_HIVE_COUNT, Math.max(1, Math.round(count) || DEFAULT_HIVE_COUNT));
+  return Array.from({ length: safeCount }, (_, i) => i + 1);
+}
 
 export const COLOR_PALETTE = [
   { name: "Blau", value: "#2980b9" },
