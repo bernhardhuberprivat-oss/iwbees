@@ -3,6 +3,7 @@ import { Entry, HiveInfo, HIVES, getQueenColorForYear } from "./types";
 import NewEntryForm from "./NewEntryForm";
 import EntryList from "./EntryList";
 import ColorPicker from "./ColorPicker";
+import StockChangeList from "./StockChangeList";
 import YearlyHarvest from "./YearlyHarvest";
 import UserPicker from "./UserPicker";
 import { CurrentUser, getStoredUser, clearStoredUser } from "./userSession";
@@ -408,18 +409,23 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
                   Änderungen in den Stammdaten
                 </button>
               </div>
-              <EntryList
-                entries={entries.filter((e) =>
-                  entryTab === "changes"
-                    ? e.notes?.startsWith(STOCK_CHANGE_PREFIX)
-                    : !e.notes?.startsWith(STOCK_CHANGE_PREFIX)
-                )}
-                loading={loading}
-                userId={user.id}
-                onDelete={handleDelete}
-                onUpdated={loadEntries}
-                hiveInfo={hiveInfo}
-              />
+              {entryTab === "changes" ? (
+                <StockChangeList
+                  entries={entries.filter((e) => e.notes?.startsWith(STOCK_CHANGE_PREFIX))}
+                  loading={loading}
+                  onDelete={handleDelete}
+                  hiveInfo={hiveInfo}
+                />
+              ) : (
+                <EntryList
+                  entries={entries.filter((e) => !e.notes?.startsWith(STOCK_CHANGE_PREFIX))}
+                  loading={loading}
+                  userId={user.id}
+                  onDelete={handleDelete}
+                  onUpdated={loadEntries}
+                  hiveInfo={hiveInfo}
+                />
+              )}
             </section>
           </>
         )}
