@@ -12,6 +12,7 @@ interface Props {
   queenYear: number | null;
   colonyStrength: string | null;
   onCreated: () => void;
+  onClose?: () => void;
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -33,6 +34,7 @@ export default function NewEntryForm({
   queenYear,
   colonyStrength,
   onCreated,
+  onClose,
 }: Props) {
   const [entryDate, setEntryDate] = useState(today());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -160,6 +162,17 @@ export default function NewEntryForm({
         style={hiveColor ? { background: hiveColor, color: readableTextColor(hiveColor) } : undefined}
       >
         Neuer Tageseintrag – {hiveName || `Stock ${hive}`}
+        {onClose && (
+          <button
+            type="button"
+            className="entry-form-close"
+            onClick={onClose}
+            aria-label="Schließen, ohne zu speichern"
+            title="Schließen, ohne zu speichern"
+          >
+            ✕
+          </button>
+        )}
       </h2>
 
       <div className="full-width">

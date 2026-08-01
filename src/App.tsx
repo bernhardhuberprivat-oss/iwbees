@@ -464,7 +464,12 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
             {selectedHive !== "all" && (
               <button
                 type="button"
-                className="new-entry-toggle"
+                className={`new-entry-toggle ${showNewEntryForm ? "pulsing" : ""}`}
+                style={
+                  showNewEntryForm && selectedInfo?.color
+                    ? ({ "--hive-pulse-color": selectedInfo.color } as any)
+                    : undefined
+                }
                 onClick={() => setShowNewEntryForm((v) => !v)}
               >
                 {showNewEntryForm ? "Neuer Tageseintrag ✕" : "+ Neuer Tageseintrag"}
@@ -481,7 +486,12 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
               hiveName={selectedInfo?.name ?? undefined}
               queenYear={selectedInfo?.queenYear ?? null}
               colonyStrength={selectedInfo?.colonyStrength ?? null}
-              onCreated={loadEntries}
+              onCreated={() => {
+                loadEntries();
+                // Fenster erst schließen, wenn die Biene fertig davongeflogen ist.
+                setTimeout(() => setShowNewEntryForm(false), 1300);
+              }}
+              onClose={() => setShowNewEntryForm(false)}
             />
           )}
 
