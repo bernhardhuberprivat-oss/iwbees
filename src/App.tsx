@@ -14,6 +14,10 @@ function formatDateDE(dateStr: string) {
   return `${d}.${m}.${y}`;
 }
 
+// Präfix, an dem automatisch erzeugte Stammdaten-Änderungsprotokolle erkannt werden,
+// damit sie in einem eigenen Reiter statt bei den normalen Tageseinträgen erscheinen.
+const STOCK_CHANGE_PREFIX = "Änderung an allgemeinen Daten vom Stock am";
+
 // Übersetzt eine Änderung an den Stock-Stammdaten in lesbare Zeilen für den Tagebucheintrag.
 function describeStockPatch(patch: Record<string, unknown>): string[] {
   const lines: string[] = [];
@@ -88,6 +92,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [pendingCount, setPendingCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
+  const [entryTab, setEntryTab] = useState<"diary" | "changes">("diary");
 
   const loadEntries = useCallback(async () => {
     if (selectedHive === "harvest") {
@@ -227,7 +232,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
     if (changeLines.length === 0) return;
 
     const todayStr = new Date().toISOString().slice(0, 10);
-    const titleLine = `Änderung an allgemeinen Daten vom Stock am ${formatDateDE(todayStr)}`;
+    const titleLine = `${STOCK_CHANGE_PREFIX} ${formatDateDE(todayStr)}`;
     const queenColor = info.queenYear ? getQueenColorForYear(info.queenYear)?.hex ?? null : null;
 
     const existing = entries.find(
@@ -387,9 +392,28 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
               />
             )}
             <section>
-              <h2>Einträge</h2>
+              <div className="entry-tabs">
+                <button
+                  type="button"
+                  className={entryTab === "diary" ? "active" : ""}
+                  onClick={() => setEntryTab("diary")}
+                >
+                  Tageseinträge
+                </button>
+                <button
+                  type="button"
+                  className={entryTab === "changes" ? "active" : ""}
+                  onClick={() => setEntryTab("changes")}
+                >
+                  Änderungen in den Stammdaten
+                </button>
+              </div>
               <EntryList
-                entries={entries}
+                entries={entries.filter((e) =>
+                  entryTab === "changes"
+                    ? e.notes?.startsWith(STOCK_CHANGE_PREFIX)
+                    : !e.notes?.startsWith(STOCK_CHANGE_PREFIX)
+                )}
                 loading={loading}
                 userId={user.id}
                 onDelete={handleDelete}
