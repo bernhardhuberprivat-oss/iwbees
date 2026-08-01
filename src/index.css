@@ -880,13 +880,49 @@ header h1 {
   border-top: 1px dashed var(--border);
 }
 
-.recent-changes-heading {
-  margin: 0 0 8px;
-  font-size: 0.8rem;
+.recent-changes-toggle {
+  border: none;
+  background: none;
+  padding: 2px 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #ab9779;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.recent-changes-toggle:hover {
+  color: #8a7256;
+}
+
+.recent-changes-panel {
+  margin-top: 8px;
+  background: #fbf6ec;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.recent-changes-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   color: #8a7256;
   text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.recent-changes-close {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #8a7256;
+  font-size: 0.9rem;
+  line-height: 1;
 }
 
 .change-log-compact {

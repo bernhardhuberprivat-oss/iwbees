@@ -125,7 +125,7 @@ export default function NewEntryForm({
         className="entry-form-heading"
         style={hiveColor ? { background: hiveColor, color: readableTextColor(hiveColor) } : undefined}
       >
-        Neuer Eintrag – {hiveName || `Stock ${hive}`}
+        Neuer Tageseintrag – {hiveName || `Stock ${hive}`}
       </h2>
 
       <div className="full-width">

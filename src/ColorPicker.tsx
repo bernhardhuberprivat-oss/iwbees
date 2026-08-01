@@ -68,6 +68,7 @@ export default function ColorPicker({
   const [occupiedCombsInput, setOccupiedCombsInput] = useState(occupiedCombs != null ? String(occupiedCombs) : "");
   const [queenCellsInput, setQueenCellsInput] = useState(queenCells != null ? String(queenCells) : "");
   const [weightInput, setWeightInput] = useState(currentWeightKg != null ? String(currentWeightKg) : "");
+  const [showRecentChanges, setShowRecentChanges] = useState(false);
 
   useEffect(() => {
     setName(currentName || "");
@@ -285,16 +286,38 @@ export default function ColorPicker({
       </div>
 
       <div className="recent-changes">
-        <h3 className="recent-changes-heading">Letzte Änderungen</h3>
-        <StockChangeList
-          entries={recentChanges || []}
-          loading={false}
-          onDelete={onDeleteChange || (() => {})}
-          hiveInfo={{} as Record<number, HiveInfo>}
-          hideHiveBadge
-          compact
-          emptyMessage="Noch keine Änderungen."
-        />
+        <button
+          type="button"
+          className="recent-changes-toggle"
+          onClick={() => setShowRecentChanges((v) => !v)}
+        >
+          Letzte Änderungen {showRecentChanges ? "▲" : "▼"}
+        </button>
+
+        {showRecentChanges && (
+          <div className="recent-changes-panel">
+            <div className="recent-changes-panel-header">
+              <span>Letzte Änderungen</span>
+              <button
+                type="button"
+                className="recent-changes-close"
+                onClick={() => setShowRecentChanges(false)}
+                aria-label="Schließen"
+              >
+                ✕
+              </button>
+            </div>
+            <StockChangeList
+              entries={recentChanges || []}
+              loading={false}
+              onDelete={onDeleteChange || (() => {})}
+              hiveInfo={{} as Record<number, HiveInfo>}
+              hideHiveBadge
+              compact
+              emptyMessage="Noch keine Änderungen."
+            />
+          </div>
+        )}
       </div>
     </div>
   );
