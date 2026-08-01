@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS hive_colors (
+  hive INTEGER PRIMARY KEY CHECK (hive BETWEEN 1 AND 10),
+  color TEXT
+);
