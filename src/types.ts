@@ -10,6 +10,13 @@ export interface Entry {
   feeding: string | null;
   honey_harvest_kg: string | null;
   weight_kg: string | null;
+  sighting_queen: boolean | null;
+  sighting_larvae: boolean | null;
+  sighting_eggs: boolean | null;
+  sighting_brood: boolean | null;
+  occupied_combs: number | null;
+  queen_cells: number | null;
+  varroa_mites: boolean | null;
   photo_keys: string[];
   created_at: string;
   pending?: boolean;

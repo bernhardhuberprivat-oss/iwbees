@@ -34,22 +34,6 @@ function describeStockPatch(patch: Record<string, unknown>): string[] {
     const v = patch.weightKg as number | null;
     lines.push(`Stockgewicht: ${v != null ? `${v} kg` : "–"}`);
   }
-  if ("sightingQueen" in patch) lines.push(`Sichtung Königin: ${patch.sightingQueen ? "ja" : "nein"}`);
-  if ("sightingLarvae" in patch) lines.push(`Sichtung Larven: ${patch.sightingLarvae ? "ja" : "nein"}`);
-  if ("sightingEggs" in patch) lines.push(`Sichtung Stifte: ${patch.sightingEggs ? "ja" : "nein"}`);
-  if ("sightingBrood" in patch) lines.push(`Sichtung Brut: ${patch.sightingBrood ? "ja" : "nein"}`);
-  if ("occupiedCombs" in patch) {
-    const v = patch.occupiedCombs as number | null;
-    lines.push(`Besetzte Waben: ${v ?? "–"}`);
-  }
-  if ("queenCells" in patch) {
-    const v = patch.queenCells as number | null;
-    lines.push(`Weiselzellen: ${v ?? "–"}`);
-  }
-  if ("varroaMites" in patch) {
-    const v = patch.varroaMites as boolean | null;
-    lines.push(`Varroamilben: ${v === null || v === undefined ? "–" : v ? "Ja" : "Nein"}`);
-  }
   return lines;
 }
 
@@ -195,13 +179,6 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       queenYear?: number | null;
       colonyStrength?: string | null;
       weightKg?: number | null;
-      sightingQueen?: boolean;
-      sightingLarvae?: boolean;
-      sightingEggs?: boolean;
-      sightingBrood?: boolean;
-      occupiedCombs?: number | null;
-      queenCells?: number | null;
-      varroaMites?: boolean | null;
     }
   ) {
     setHiveInfo((prev) => {
@@ -279,6 +256,15 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
 
   const selectedInfo = typeof selectedHive === "number" ? hiveInfo[selectedHive] : undefined;
 
+  // Zeigt im Stammdaten-Fenster nur an, ob laut dem letzten Tageseintrag mit erfasster
+  // Varroamilben-Angabe aktuell "Ja" gilt - verschwindet automatisch, sobald ein neuerer
+  // Eintrag "Nein" erfasst. Rein abgeleitet, hier nicht editierbar (nur im Tageseintrag).
+  const latestVarroaEntry =
+    typeof selectedHive === "number"
+      ? entries.find((e) => e.hive === selectedHive && e.varroa_mites !== null && e.varroa_mites !== undefined)
+      : undefined;
+  const varroaMitesActive = latestVarroaEntry ? !!latestVarroaEntry.varroa_mites : false;
+
   return (
     <div className="app">
       <header>
@@ -352,13 +338,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
           currentQueenYear={selectedInfo?.queenYear}
           currentColonyStrength={selectedInfo?.colonyStrength}
           currentWeightKg={selectedInfo?.weightKg}
-          sightingQueen={selectedInfo?.sightingQueen}
-          sightingLarvae={selectedInfo?.sightingLarvae}
-          sightingEggs={selectedInfo?.sightingEggs}
-          sightingBrood={selectedInfo?.sightingBrood}
-          occupiedCombs={selectedInfo?.occupiedCombs}
-          queenCells={selectedInfo?.queenCells}
-          varroaMites={selectedInfo?.varroaMites}
+          varroaMitesActive={varroaMitesActive}
           recentChanges={entries
             .filter((e) => e.hive === selectedHive && e.notes?.startsWith(STOCK_CHANGE_PREFIX))
             .slice(0, 5)}
@@ -369,7 +349,6 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
           onQueenYearChange={(queenYear) => handleUpdateHive(selectedHive, { queenYear })}
           onColonyStrengthChange={(colonyStrength) => handleUpdateHive(selectedHive, { colonyStrength })}
           onWeightChange={(weightKg) => handleUpdateHive(selectedHive, { weightKg })}
-          onSightingsChange={(patch) => handleUpdateHive(selectedHive, patch)}
         />
       )}
 
@@ -390,7 +369,6 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
                 queenYear={selectedInfo?.queenYear ?? null}
                 colonyStrength={selectedInfo?.colonyStrength ?? null}
                 weightKg={selectedInfo?.weightKg ?? null}
-                varroaMites={selectedInfo?.varroaMites ?? null}
                 onCreated={loadEntries}
               />
             )}

@@ -12,7 +12,6 @@ interface Props {
   queenYear: number | null;
   colonyStrength: string | null;
   weightKg: number | null;
-  varroaMites?: boolean | null;
   onCreated: () => void;
 }
 
@@ -35,7 +34,6 @@ export default function NewEntryForm({
   queenYear,
   colonyStrength,
   weightKg,
-  varroaMites,
   onCreated,
 }: Props) {
   const [entryDate, setEntryDate] = useState(today());
@@ -43,6 +41,13 @@ export default function NewEntryForm({
   const [notes, setNotes] = useState("");
   const [varroa, setVarroa] = useState("");
   const [feeding, setFeeding] = useState("");
+  const [sightingQueen, setSightingQueen] = useState(false);
+  const [sightingLarvae, setSightingLarvae] = useState(false);
+  const [sightingEggs, setSightingEggs] = useState(false);
+  const [sightingBrood, setSightingBrood] = useState(false);
+  const [occupiedCombs, setOccupiedCombs] = useState("");
+  const [queenCells, setQueenCells] = useState("");
+  const [varroaMites, setVarroaMites] = useState<"" | "ja" | "nein">("");
   const [photos, setPhotos] = useState<FileList | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -56,6 +61,13 @@ export default function NewEntryForm({
     setNotes("");
     setVarroa("");
     setFeeding("");
+    setSightingQueen(false);
+    setSightingLarvae(false);
+    setSightingEggs(false);
+    setSightingBrood(false);
+    setOccupiedCombs("");
+    setQueenCells("");
+    setVarroaMites("");
     setPhotos(null);
     (document.getElementById("photo-input") as HTMLInputElement | null)?.value &&
       ((document.getElementById("photo-input") as HTMLInputElement).value = "");
@@ -81,6 +93,13 @@ export default function NewEntryForm({
       form.set("varroa", varroa);
       form.set("feeding", feeding);
       form.set("weightKg", weightKg != null ? String(weightKg) : "");
+      form.set("sightingQueen", String(sightingQueen));
+      form.set("sightingLarvae", String(sightingLarvae));
+      form.set("sightingEggs", String(sightingEggs));
+      form.set("sightingBrood", String(sightingBrood));
+      form.set("occupiedCombs", occupiedCombs);
+      form.set("queenCells", queenCells);
+      form.set("varroaMites", varroaMites === "" ? "" : varroaMites === "ja" ? "true" : "false");
       photoList.forEach((file) => form.append("photos", file));
 
       const res = await fetch("/api/entries", { method: "POST", body: form });
@@ -103,6 +122,13 @@ export default function NewEntryForm({
             varroa,
             feeding,
             weightKg: weightKg != null ? String(weightKg) : "",
+            sightingQueen,
+            sightingLarvae,
+            sightingEggs,
+            sightingBrood,
+            occupiedCombs,
+            queenCells,
+            varroaMites,
             photos: photoList.map((f) => ({ name: f.name, type: f.type, blob: f })),
           });
           setInfo("Kein Internet – Eintrag wurde lokal gespeichert und wird automatisch hochgeladen, sobald du wieder online bist.");
@@ -160,8 +186,60 @@ export default function NewEntryForm({
         )}
       </div>
 
+      <div className="sightings-section">
+        <span className="color-picker-label">Sichtungen:</span>
+
+        <div className="sightings-checks">
+          <label className="sighting-check">
+            <input type="checkbox" checked={sightingQueen} onChange={(e) => setSightingQueen(e.target.checked)} />
+            Königin
+          </label>
+          <label className="sighting-check">
+            <input type="checkbox" checked={sightingLarvae} onChange={(e) => setSightingLarvae(e.target.checked)} />
+            Larven
+          </label>
+          <label className="sighting-check">
+            <input type="checkbox" checked={sightingEggs} onChange={(e) => setSightingEggs(e.target.checked)} />
+            Stifte
+          </label>
+          <label className="sighting-check">
+            <input type="checkbox" checked={sightingBrood} onChange={(e) => setSightingBrood(e.target.checked)} />
+            Brut
+          </label>
+        </div>
+
+        <div className="sightings-numbers">
+          <label className="sighting-number">
+            Besetzte Waben
+            <input
+              type="number"
+              min={0}
+              value={occupiedCombs}
+              onChange={(e) => setOccupiedCombs(e.target.value)}
+            />
+          </label>
+          <label className="sighting-number">
+            Weiselzellen
+            <input
+              type="number"
+              min={0}
+              value={queenCells}
+              onChange={(e) => setQueenCells(e.target.value)}
+            />
+          </label>
+          <label className="sighting-number">
+            Varroamilben
+            <select value={varroaMites} onChange={(e) => setVarroaMites(e.target.value as "" | "ja" | "nein")}>
+              <option value="">–</option>
+              <option value="ja">Ja</option>
+              <option value="nein">Nein</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
       <div className="form-row">
-        {varroaMites && (
+        {varroaMites === "ja" && (
           <label>
             Varroabefallbehandlung
             <input

@@ -31,6 +31,15 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
   const [varroa, setVarroa] = useState(entry.varroa || "");
   const [feeding, setFeeding] = useState(entry.feeding || "");
   const [weightKg, setWeightKg] = useState(entry.weight_kg ? String(entry.weight_kg) : "");
+  const [sightingQueen, setSightingQueen] = useState(!!entry.sighting_queen);
+  const [sightingLarvae, setSightingLarvae] = useState(!!entry.sighting_larvae);
+  const [sightingEggs, setSightingEggs] = useState(!!entry.sighting_eggs);
+  const [sightingBrood, setSightingBrood] = useState(!!entry.sighting_brood);
+  const [occupiedCombs, setOccupiedCombs] = useState(entry.occupied_combs != null ? String(entry.occupied_combs) : "");
+  const [queenCells, setQueenCells] = useState(entry.queen_cells != null ? String(entry.queen_cells) : "");
+  const [varroaMites, setVarroaMites] = useState<"" | "ja" | "nein">(
+    entry.varroa_mites === null || entry.varroa_mites === undefined ? "" : entry.varroa_mites ? "ja" : "nein"
+  );
   const [newPhotos, setNewPhotos] = useState<FileList | null>(null);
   const [removedKeys, setRemovedKeys] = useState<string[]>([]);
   const [removedIndices, setRemovedIndices] = useState<number[]>([]);
@@ -53,7 +62,23 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
           : [];
         await updatePendingEntryFields(
           localId,
-          { entryDate, notes, queenColor, queenYear, colonyStrength, varroa, feeding, weightKg },
+          {
+            entryDate,
+            notes,
+            queenColor,
+            queenYear,
+            colonyStrength,
+            varroa,
+            feeding,
+            weightKg,
+            sightingQueen,
+            sightingLarvae,
+            sightingEggs,
+            sightingBrood,
+            occupiedCombs,
+            queenCells,
+            varroaMites,
+          },
           keepIndices,
           newFiles
         );
@@ -69,6 +94,13 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
         form.set("varroa", varroa);
         form.set("feeding", feeding);
         if (weightKg) form.set("weightKg", weightKg);
+        form.set("sightingQueen", String(sightingQueen));
+        form.set("sightingLarvae", String(sightingLarvae));
+        form.set("sightingEggs", String(sightingEggs));
+        form.set("sightingBrood", String(sightingBrood));
+        form.set("occupiedCombs", occupiedCombs);
+        form.set("queenCells", queenCells);
+        form.set("varroaMites", varroaMites === "" ? "" : varroaMites === "ja" ? "true" : "false");
         const keepKeys = (entry.photo_keys || []).filter((k) => !removedKeys.includes(k));
         form.set("keepPhotoKeys", JSON.stringify(keepKeys));
         if (newPhotos) Array.from(newPhotos).forEach((f) => form.append("photos", f));
@@ -123,11 +155,55 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
         </label>
       </div>
 
+      <div className="sightings-section">
+        <span className="color-picker-label">Sichtungen:</span>
+
+        <div className="sightings-checks">
+          <label className="sighting-check">
+            <input type="checkbox" checked={sightingQueen} onChange={(e) => setSightingQueen(e.target.checked)} />
+            Königin
+          </label>
+          <label className="sighting-check">
+            <input type="checkbox" checked={sightingLarvae} onChange={(e) => setSightingLarvae(e.target.checked)} />
+            Larven
+          </label>
+          <label className="sighting-check">
+            <input type="checkbox" checked={sightingEggs} onChange={(e) => setSightingEggs(e.target.checked)} />
+            Stifte
+          </label>
+          <label className="sighting-check">
+            <input type="checkbox" checked={sightingBrood} onChange={(e) => setSightingBrood(e.target.checked)} />
+            Brut
+          </label>
+        </div>
+
+        <div className="sightings-numbers">
+          <label className="sighting-number">
+            Besetzte Waben
+            <input type="number" min={0} value={occupiedCombs} onChange={(e) => setOccupiedCombs(e.target.value)} />
+          </label>
+          <label className="sighting-number">
+            Weiselzellen
+            <input type="number" min={0} value={queenCells} onChange={(e) => setQueenCells(e.target.value)} />
+          </label>
+          <label className="sighting-number">
+            Varroamilben
+            <select value={varroaMites} onChange={(e) => setVarroaMites(e.target.value as "" | "ja" | "nein")}>
+              <option value="">–</option>
+              <option value="ja">Ja</option>
+              <option value="nein">Nein</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
       <div className="form-row">
-        <label>
-          Varroabefall
-          <input type="text" value={varroa} onChange={(e) => setVarroa(e.target.value)} />
-        </label>
+        {varroaMites === "ja" && (
+          <label>
+            Varroabefallbehandlung
+            <input type="text" value={varroa} onChange={(e) => setVarroa(e.target.value)} />
+          </label>
+        )}
 
         <label>
           Fütterung

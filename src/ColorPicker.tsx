@@ -3,16 +3,6 @@ import { COLOR_PALETTE, HIVE_CATEGORIES, Entry, HiveInfo } from "./types";
 import QueenColorField from "./QueenColorField";
 import StockChangeList from "./StockChangeList";
 
-export interface SightingsPatch {
-  sightingQueen?: boolean;
-  sightingLarvae?: boolean;
-  sightingEggs?: boolean;
-  sightingBrood?: boolean;
-  occupiedCombs?: number | null;
-  queenCells?: number | null;
-  varroaMites?: boolean | null;
-}
-
 interface Props {
   hive: number;
   currentColor?: string | null;
@@ -21,13 +11,7 @@ interface Props {
   currentQueenYear?: number | null;
   currentColonyStrength?: string | null;
   currentWeightKg?: number | null;
-  sightingQueen?: boolean | null;
-  sightingLarvae?: boolean | null;
-  sightingEggs?: boolean | null;
-  sightingBrood?: boolean | null;
-  occupiedCombs?: number | null;
-  queenCells?: number | null;
-  varroaMites?: boolean | null;
+  varroaMitesActive?: boolean;
   recentChanges?: Entry[];
   onDeleteChange?: (id: number) => void;
   onPickColor: (color: string | null) => void;
@@ -36,7 +20,6 @@ interface Props {
   onQueenYearChange: (year: number | null) => void;
   onColonyStrengthChange: (value: string | null) => void;
   onWeightChange: (value: number | null) => void;
-  onSightingsChange: (patch: SightingsPatch) => void;
 }
 
 export default function ColorPicker({
@@ -47,13 +30,7 @@ export default function ColorPicker({
   currentQueenYear,
   currentColonyStrength,
   currentWeightKg,
-  sightingQueen,
-  sightingLarvae,
-  sightingEggs,
-  sightingBrood,
-  occupiedCombs,
-  queenCells,
-  varroaMites,
+  varroaMitesActive,
   recentChanges,
   onDeleteChange,
   onPickColor,
@@ -62,25 +39,14 @@ export default function ColorPicker({
   onQueenYearChange,
   onColonyStrengthChange,
   onWeightChange,
-  onSightingsChange,
 }: Props) {
   const [name, setName] = useState(currentName || "");
-  const [occupiedCombsInput, setOccupiedCombsInput] = useState(occupiedCombs != null ? String(occupiedCombs) : "");
-  const [queenCellsInput, setQueenCellsInput] = useState(queenCells != null ? String(queenCells) : "");
   const [weightInput, setWeightInput] = useState(currentWeightKg != null ? String(currentWeightKg) : "");
   const [showRecentChanges, setShowRecentChanges] = useState(false);
 
   useEffect(() => {
     setName(currentName || "");
   }, [hive, currentName]);
-
-  useEffect(() => {
-    setOccupiedCombsInput(occupiedCombs != null ? String(occupiedCombs) : "");
-  }, [hive, occupiedCombs]);
-
-  useEffect(() => {
-    setQueenCellsInput(queenCells != null ? String(queenCells) : "");
-  }, [hive, queenCells]);
 
   useEffect(() => {
     setWeightInput(currentWeightKg != null ? String(currentWeightKg) : "");
@@ -90,20 +56,6 @@ export default function ColorPicker({
     const trimmed = name.trim();
     if (trimmed !== (currentName || "")) {
       onRename(trimmed || null);
-    }
-  }
-
-  function commitOccupiedCombs() {
-    const value = occupiedCombsInput.trim() === "" ? null : Number(occupiedCombsInput);
-    if (value !== (occupiedCombs ?? null)) {
-      onSightingsChange({ occupiedCombs: value });
-    }
-  }
-
-  function commitQueenCells() {
-    const value = queenCellsInput.trim() === "" ? null : Number(queenCellsInput);
-    if (value !== (queenCells ?? null)) {
-      onSightingsChange({ queenCells: value });
     }
   }
 
@@ -183,6 +135,12 @@ export default function ColorPicker({
         <QueenColorField value={currentQueenYear ?? null} onChange={onQueenYearChange} />
       </div>
 
+      {varroaMitesActive && (
+        <div className="varroa-status-badge" title="Wird im Tageseintrag erfasst, verschwindet automatisch bei Varroamilben = Nein">
+          🔬 Varroamilben: Ja
+        </div>
+      )}
+
       <div className="color-swatch-row">
         <span className="color-picker-label">Stock {hive} markieren:</span>
         <div className="color-swatches">
@@ -206,82 +164,6 @@ export default function ColorPicker({
           >
             ✕
           </button>
-        </div>
-      </div>
-
-      <div className="sightings-section">
-        <span className="color-picker-label">Sichtungen:</span>
-
-        <div className="sightings-checks">
-          <label className="sighting-check">
-            <input
-              type="checkbox"
-              checked={!!sightingQueen}
-              onChange={(e) => onSightingsChange({ sightingQueen: e.target.checked })}
-            />
-            Königin
-          </label>
-          <label className="sighting-check">
-            <input
-              type="checkbox"
-              checked={!!sightingLarvae}
-              onChange={(e) => onSightingsChange({ sightingLarvae: e.target.checked })}
-            />
-            Larven
-          </label>
-          <label className="sighting-check">
-            <input
-              type="checkbox"
-              checked={!!sightingEggs}
-              onChange={(e) => onSightingsChange({ sightingEggs: e.target.checked })}
-            />
-            Stifte
-          </label>
-          <label className="sighting-check">
-            <input
-              type="checkbox"
-              checked={!!sightingBrood}
-              onChange={(e) => onSightingsChange({ sightingBrood: e.target.checked })}
-            />
-            Brut
-          </label>
-        </div>
-
-        <div className="sightings-numbers">
-          <label className="sighting-number">
-            Besetzte Waben
-            <input
-              type="number"
-              min={0}
-              value={occupiedCombsInput}
-              onChange={(e) => setOccupiedCombsInput(e.target.value)}
-              onBlur={commitOccupiedCombs}
-            />
-          </label>
-          <label className="sighting-number">
-            Weiselzellen
-            <input
-              type="number"
-              min={0}
-              value={queenCellsInput}
-              onChange={(e) => setQueenCellsInput(e.target.value)}
-              onBlur={commitQueenCells}
-            />
-          </label>
-          <label className="sighting-number">
-            Varroamilben
-            <select
-              value={varroaMites === null || varroaMites === undefined ? "" : varroaMites ? "ja" : "nein"}
-              onChange={(e) => {
-                const v = e.target.value;
-                onSightingsChange({ varroaMites: v === "" ? null : v === "ja" });
-              }}
-            >
-              <option value="">–</option>
-              <option value="ja">Ja</option>
-              <option value="nein">Nein</option>
-            </select>
-          </label>
         </div>
       </div>
 

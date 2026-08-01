@@ -7,6 +7,16 @@ function getPhotoStore() {
   return getStore("bee-photos");
 }
 
+function parseBool(v: FormDataEntryValue | null): boolean {
+  return v === "true";
+}
+
+function parseTriBool(v: FormDataEntryValue | null): boolean | null {
+  if (v === "true") return true;
+  if (v === "false") return false;
+  return null;
+}
+
 export default async (req: Request, context: Context) => {
   const db = getDatabase();
   const url = new URL(req.url);
@@ -39,6 +49,15 @@ export default async (req: Request, context: Context) => {
     const honeyHarvestKg = honeyHarvestRaw ? Number(honeyHarvestRaw) : null;
     const weightRaw = form.get("weightKg");
     const weightKg = weightRaw ? Number(weightRaw) : null;
+    const sightingQueen = parseBool(form.get("sightingQueen"));
+    const sightingLarvae = parseBool(form.get("sightingLarvae"));
+    const sightingEggs = parseBool(form.get("sightingEggs"));
+    const sightingBrood = parseBool(form.get("sightingBrood"));
+    const occupiedCombsRaw = form.get("occupiedCombs");
+    const occupiedCombs = occupiedCombsRaw ? Number(occupiedCombsRaw) : null;
+    const queenCellsRaw = form.get("queenCells");
+    const queenCells = queenCellsRaw ? Number(queenCellsRaw) : null;
+    const varroaMites = parseTriBool(form.get("varroaMites"));
 
     if (!userId) {
       return new Response("userId ist erforderlich", { status: 400 });
@@ -60,8 +79,20 @@ export default async (req: Request, context: Context) => {
     }
 
     const [row] = await db.sql`
-      INSERT INTO entries (user_id, hive, entry_date, notes, queen_color, queen_year, colony_strength, varroa, feeding, honey_harvest_kg, weight_kg, photo_keys)
-      VALUES (${userId}, ${hive}, ${entryDate}, ${notes}, ${queenColor}, ${queenYear}, ${colonyStrength}, ${varroa}, ${feeding}, ${honeyHarvestKg}, ${weightKg}, ${JSON.stringify(photoKeys)})
+      INSERT INTO entries (
+        user_id, hive, entry_date, notes, queen_color, queen_year, colony_strength, varroa, feeding,
+        honey_harvest_kg, weight_kg,
+        sighting_queen, sighting_larvae, sighting_eggs, sighting_brood,
+        occupied_combs, queen_cells, varroa_mites,
+        photo_keys
+      )
+      VALUES (
+        ${userId}, ${hive}, ${entryDate}, ${notes}, ${queenColor}, ${queenYear}, ${colonyStrength}, ${varroa}, ${feeding},
+        ${honeyHarvestKg}, ${weightKg},
+        ${sightingQueen}, ${sightingLarvae}, ${sightingEggs}, ${sightingBrood},
+        ${occupiedCombs}, ${queenCells}, ${varroaMites},
+        ${JSON.stringify(photoKeys)}
+      )
       RETURNING *
     `;
 
@@ -94,6 +125,15 @@ export default async (req: Request, context: Context) => {
     const honeyHarvestKg = honeyHarvestRaw ? Number(honeyHarvestRaw) : null;
     const weightRaw = form.get("weightKg");
     const weightKg = weightRaw ? Number(weightRaw) : null;
+    const sightingQueen = parseBool(form.get("sightingQueen"));
+    const sightingLarvae = parseBool(form.get("sightingLarvae"));
+    const sightingEggs = parseBool(form.get("sightingEggs"));
+    const sightingBrood = parseBool(form.get("sightingBrood"));
+    const occupiedCombsRaw = form.get("occupiedCombs");
+    const occupiedCombs = occupiedCombsRaw ? Number(occupiedCombsRaw) : null;
+    const queenCellsRaw = form.get("queenCells");
+    const queenCells = queenCellsRaw ? Number(queenCellsRaw) : null;
+    const varroaMites = parseTriBool(form.get("varroaMites"));
 
     // Fotos: der Client schickt die Keys der Fotos, die behalten werden sollen -
     // alles andere aus dem bisherigen Bestand wird gelöscht. Neue Dateien kommen dazu.
@@ -133,6 +173,13 @@ export default async (req: Request, context: Context) => {
           feeding = ${feeding},
           honey_harvest_kg = ${honeyHarvestKg},
           weight_kg = ${weightKg},
+          sighting_queen = ${sightingQueen},
+          sighting_larvae = ${sightingLarvae},
+          sighting_eggs = ${sightingEggs},
+          sighting_brood = ${sightingBrood},
+          occupied_combs = ${occupiedCombs},
+          queen_cells = ${queenCells},
+          varroa_mites = ${varroaMites},
           photo_keys = ${JSON.stringify(finalKeys)}
       WHERE id = ${id} AND user_id = ${userId}
       RETURNING *

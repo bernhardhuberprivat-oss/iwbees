@@ -23,6 +23,13 @@ export interface PendingEntry {
   varroa: string;
   feeding: string;
   weightKg: string;
+  sightingQueen: boolean;
+  sightingLarvae: boolean;
+  sightingEggs: boolean;
+  sightingBrood: boolean;
+  occupiedCombs: string;
+  queenCells: string;
+  varroaMites: "" | "ja" | "nein";
   photos: PendingPhoto[];
   createdAt: number;
 }
@@ -77,7 +84,21 @@ export async function updatePendingEntryFields(
   fields: Partial<
     Pick<
       PendingEntry,
-      "entryDate" | "notes" | "queenColor" | "queenYear" | "colonyStrength" | "varroa" | "feeding" | "weightKg"
+      | "entryDate"
+      | "notes"
+      | "queenColor"
+      | "queenYear"
+      | "colonyStrength"
+      | "varroa"
+      | "feeding"
+      | "weightKg"
+      | "sightingQueen"
+      | "sightingLarvae"
+      | "sightingEggs"
+      | "sightingBrood"
+      | "occupiedCombs"
+      | "queenCells"
+      | "varroaMites"
     >
   >,
   keepPhotoIndices: number[],
@@ -120,6 +141,13 @@ function buildFormData(entry: PendingEntry): FormData {
   form.set("varroa", entry.varroa);
   form.set("feeding", entry.feeding);
   if (entry.weightKg) form.set("weightKg", entry.weightKg);
+  form.set("sightingQueen", String(entry.sightingQueen));
+  form.set("sightingLarvae", String(entry.sightingLarvae));
+  form.set("sightingEggs", String(entry.sightingEggs));
+  form.set("sightingBrood", String(entry.sightingBrood));
+  form.set("occupiedCombs", entry.occupiedCombs);
+  form.set("queenCells", entry.queenCells);
+  form.set("varroaMites", entry.varroaMites === "" ? "" : entry.varroaMites === "ja" ? "true" : "false");
   for (const photo of entry.photos) {
     form.append("photos", new File([photo.blob], photo.name, { type: photo.type }));
   }
@@ -168,6 +196,13 @@ export function pendingToDisplayEntry(entry: PendingEntry) {
     feeding: entry.feeding,
     honey_harvest_kg: null,
     weight_kg: entry.weightKg || null,
+    sighting_queen: entry.sightingQueen,
+    sighting_larvae: entry.sightingLarvae,
+    sighting_eggs: entry.sightingEggs,
+    sighting_brood: entry.sightingBrood,
+    occupied_combs: entry.occupiedCombs ? Number(entry.occupiedCombs) : null,
+    queen_cells: entry.queenCells ? Number(entry.queenCells) : null,
+    varroa_mites: entry.varroaMites === "" ? null : entry.varroaMites === "ja",
     photo_keys: [] as string[],
     created_at: new Date(entry.createdAt).toISOString(),
     pending: true as const,

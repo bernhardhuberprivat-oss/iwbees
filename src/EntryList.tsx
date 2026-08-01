@@ -94,6 +94,26 @@ export default function EntryList({ entries, loading, userId, onDelete, onUpdate
             {entry.weight_kg && <span>⚖️ Stockgewicht: {entry.weight_kg} kg</span>}
           </div>
 
+          {(() => {
+            const seen = [
+              entry.sighting_queen && "Königin",
+              entry.sighting_larvae && "Larven",
+              entry.sighting_eggs && "Stifte",
+              entry.sighting_brood && "Brut",
+            ].filter(Boolean);
+            const hasSightingInfo =
+              seen.length > 0 || entry.occupied_combs != null || entry.queen_cells != null || entry.varroa_mites != null;
+            if (!hasSightingInfo) return null;
+            return (
+              <div className="entry-meta entry-sightings">
+                {seen.length > 0 && <span>👁️ Sichtungen: {seen.join(", ")}</span>}
+                {entry.occupied_combs != null && <span>🧱 Waben: {entry.occupied_combs}</span>}
+                {entry.queen_cells != null && <span>👑 Weiselzellen: {entry.queen_cells}</span>}
+                {entry.varroa_mites != null && <span>🔬 Varroamilben: {entry.varroa_mites ? "Ja" : "Nein"}</span>}
+              </div>
+            );
+          })()}
+
           {entry.notes && <p className="entry-notes">{entry.notes}</p>}
 
           {entry.pending
