@@ -1,7 +1,8 @@
 import type { Context, Config } from "@netlify/functions";
+import { withCors } from "./_cors.mts";
 import { getStore } from "@netlify/blobs";
 
-export default async (req: Request, context: Context) => {
+const handler = async (req: Request, context: Context) => {
   const url = new URL(req.url);
   const key = url.searchParams.get("key");
   if (!key) {
@@ -26,3 +27,5 @@ export default async (req: Request, context: Context) => {
 export const config: Config = {
   path: "/api/photo",
 };
+
+export default withCors(handler);

@@ -103,6 +103,14 @@ header h1 {
   margin-bottom: 12px;
 }
 
+.admin-user-count {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #ab9779;
+  border-left: 1px solid var(--border);
+  padding-left: 10px;
+}
+
 .link-btn {
   border: none;
   background: none;
@@ -1471,4 +1479,125 @@ header h1 {
 .harvest-kg {
   color: #6b5a42;
   flex: 1;
+}
+
+.paywall {
+  max-width: 420px;
+  margin: 0 auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.paywall-benefits {
+  text-align: left;
+  margin: 16px 0;
+  padding-left: 20px;
+  color: #5a4a35;
+}
+
+.paywall-benefits li {
+  margin-bottom: 8px;
+}
+
+.paywall-price {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin: 16px 0;
+}
+
+.paywall button.primary {
+  background: var(--honey);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  width: 100%;
+}
+
+.paywall button.primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.paywall button.link {
+  background: none;
+  border: none;
+  color: #ab9779;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: 12px;
+  font-size: 0.9rem;
+}
+
+.admin-panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(58, 42, 26, 0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.admin-panel {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 20px;
+  width: 100%;
+  max-width: 560px;
+}
+
+.admin-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.admin-panel-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.admin-user-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.admin-user-table th,
+.admin-user-table td {
+  text-align: left;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gift-toggle {
+  background: none;
+  border: 1px solid var(--honey);
+  color: var(--honey-dark);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gift-toggle.gifted {
+  background: var(--honey);
+  color: white;
+  border-color: var(--honey-dark);
+}
+
+.gift-toggle:disabled {
+  opacity: 0.6;
+  cursor: default;
 }

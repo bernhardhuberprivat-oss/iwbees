@@ -3,6 +3,7 @@ import DatePicker from "./DatePicker";
 import QueenColorField from "./QueenColorField";
 import { updatePendingEntryFields } from "./offline";
 import { Entry, getQueenColorForYear } from "./types";
+import { apiUrl } from "./apiBase";
 
 interface Props {
   entry: Entry;
@@ -105,7 +106,7 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
         form.set("keepPhotoKeys", JSON.stringify(keepKeys));
         if (newPhotos) Array.from(newPhotos).forEach((f) => form.append("photos", f));
 
-        const res = await fetch("/api/entries", { method: "PUT", body: form });
+        const res = await fetch(apiUrl("/api/entries"), { method: "PUT", body: form });
         if (!res.ok) throw new Error(await res.text());
       }
       onSaved();
@@ -235,7 +236,7 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
               const removed = removedKeys.includes(key);
               return (
                 <div key={key} className={`edit-photo-thumb ${removed ? "removed" : ""}`}>
-                  <img src={`/api/photo?key=${key}`} alt="Stockkontrolle" />
+                  <img src={apiUrl(`/api/photo?key=${key}`)} alt="Stockkontrolle" />
                   <button
                     type="button"
                     className="remove-photo-btn"

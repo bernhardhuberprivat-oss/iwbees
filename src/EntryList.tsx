@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Entry, HiveInfo } from "./types";
 import { readableTextColor } from "./colorUtils";
 import EditEntryForm from "./EditEntryForm";
+import { apiUrl } from "./apiBase";
 
 interface Props {
   entries: Entry[];
@@ -135,10 +136,10 @@ export default function EntryList({ entries, loading, userId, onDelete, onUpdate
                   {entry.photo_keys.map((key) => (
                     <img
                       key={key}
-                      src={`/api/photo?key=${key}`}
+                      src={apiUrl(`/api/photo?key=${key}`)}
                       alt="Stockkontrolle"
                       className="entry-photo-thumb"
-                      onClick={() => setLightboxUrl(`/api/photo?key=${key}`)}
+                      onClick={() => setLightboxUrl(apiUrl(`/api/photo?key=${key}`))}
                     />
                   ))}
                 </div>

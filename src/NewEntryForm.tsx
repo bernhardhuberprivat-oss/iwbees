@@ -3,6 +3,7 @@ import DatePicker from "./DatePicker";
 import { addPendingEntry } from "./offline";
 import { readableTextColor } from "./colorUtils";
 import { getQueenColorForYear } from "./types";
+import { apiUrl } from "./apiBase";
 
 interface Props {
   userId: number;
@@ -110,7 +111,7 @@ export default function NewEntryForm({
       form.set("varroaMites", varroaMites === "" ? "" : varroaMites === "ja" ? "true" : "false");
       photoList.forEach((file) => form.append("photos", file));
 
-      const res = await fetch("/api/entries", { method: "POST", body: form });
+      const res = await fetch(apiUrl("/api/entries"), { method: "POST", body: form });
       if (!res.ok) throw new Error(await res.text());
 
       triggerBeeFlight();

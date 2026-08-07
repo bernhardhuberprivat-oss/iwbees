@@ -5,9 +5,13 @@ import EntryList from "./EntryList";
 import ColorPicker from "./ColorPicker";
 import HarvestPanel, { HarvestEntry } from "./HarvestPanel";
 import UserPicker from "./UserPicker";
+import Paywall from "./Paywall";
+import AdminPanel from "./AdminPanel";
 import { CurrentUser, getStoredUser, clearStoredUser, storeUser } from "./userSession";
 import { cacheGet, cacheSet, getPendingEntries, deletePendingEntry, pendingToDisplayEntry, syncPendingEntries } from "./offline";
 import { readableTextColor } from "./colorUtils";
+import { apiUrl } from "./apiBase";
+import { isTrialActive, checkSubscription, isAdminUser } from "./subscription";
 
 function formatDateDE(dateStr: string) {
   const [y, m, d] = dateStr.split("-");
@@ -33,8 +37,38 @@ function describeStockPatch(patch: Record<string, unknown>): string[] {
   return lines;
 }
 
+type AccessState = "checking" | "granted" | "locked";
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => getStoredUser());
+  const [access, setAccess] = useState<AccessState>("checking");
+
+  function handleSwitchUser() {
+    clearStoredUser();
+    setCurrentUser(null);
+    setAccess("checking");
+  }
+
+  useEffect(() => {
+    if (!currentUser) return;
+    let cancelled = false;
+
+    async function evaluateAccess() {
+      // isTrialActive() prüft nur die 30-Tage-Testphase; Admin-Konten werden erst im
+      // checkSubscription()-Fallback unten geprüft (siehe isAdminUser() in subscription.ts).
+      if (isTrialActive(currentUser!)) {
+        if (!cancelled) setAccess("granted");
+        return;
+      }
+      const subscribed = await checkSubscription(currentUser!);
+      if (!cancelled) setAccess(subscribed ? "granted" : "locked");
+    }
+
+    evaluateAccess();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser]);
 
   if (!currentUser) {
     return (
@@ -48,15 +82,28 @@ export default function App() {
     );
   }
 
-  return (
-    <Diary
-      user={currentUser}
-      onSwitchUser={() => {
-        clearStoredUser();
-        setCurrentUser(null);
-      }}
-    />
-  );
+  if (access === "checking") {
+    return (
+      <div className="app">
+        <header>
+          <h1>🐝 isybee</h1>
+        </header>
+        <p className="subtitle">Einen Moment …</p>
+      </div>
+    );
+  }
+
+  if (access === "locked") {
+    return (
+      <Paywall
+        user={currentUser}
+        onUnlocked={() => setAccess("granted")}
+        onSwitchUser={handleSwitchUser}
+      />
+    );
+  }
+
+  return <Diary user={currentUser} onSwitchUser={handleSwitchUser} />;
 }
 
 interface DiaryProps {
@@ -81,6 +128,24 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   const [hiveCountInput, setHiveCountInput] = useState(String(user.hiveCount || 10));
   const [hiveCountError, setHiveCountError] = useState("");
   const [savingHiveCount, setSavingHiveCount] = useState(false);
+  const [totalUserCount, setTotalUserCount] = useState<number | null>(null);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+
+  useEffect(() => {
+    if (!isAdminUser(user)) return;
+    let cancelled = false;
+    fetch(apiUrl("/api/users"))
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setTotalUserCount(data.count ?? null);
+      })
+      .catch(() => {
+        // still keine große Sache - die Anzahl ist nur eine grobe Zusatzinfo für den Admin
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   async function handleSaveHiveCount(e: FormEvent) {
     e.preventDefault();
@@ -92,7 +157,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
     setSavingHiveCount(true);
     setHiveCountError("");
     try {
-      const res = await fetch("/api/users", {
+      const res = await fetch(apiUrl("/api/users"), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: user.id, hiveCount: next }),
@@ -120,7 +185,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
     const cacheKey = `entries:${user.id}:${selectedHive}`;
     try {
       const query = selectedHive === "all" ? "" : `&hive=${selectedHive}`;
-      const res = await fetch(`/api/entries?userId=${user.id}${query}`);
+      const res = await fetch(apiUrl(`/api/entries?userId=${user.id}${query}`));
       const data: Entry[] = await res.json();
       cacheSet(cacheKey, data);
       await mergeWithPending(data);
@@ -147,7 +212,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   const loadHiveInfo = useCallback(async () => {
     const cacheKey = `hiveInfo:${user.id}`;
     try {
-      const res = await fetch(`/api/hive-colors?userId=${user.id}`);
+      const res = await fetch(apiUrl(`/api/hive-colors?userId=${user.id}`));
       const data = await res.json();
       cacheSet(cacheKey, data);
       setHiveInfo(data);
@@ -168,7 +233,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
 
   const loadHarvest = useCallback(async () => {
     try {
-      const res = await fetch(`/api/harvest-entries?userId=${user.id}&year=${new Date().getFullYear()}`);
+      const res = await fetch(apiUrl(`/api/harvest-entries?userId=${user.id}&year=${new Date().getFullYear()}`));
       const data = await res.json();
       setHarvestEntries(data.entries || []);
       setHarvestYearTotal(Number(data.yearTotal) || 0);
@@ -214,7 +279,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       loadEntries();
       return;
     }
-    await fetch(`/api/entries?id=${id}&userId=${user.id}`, { method: "DELETE" });
+    await fetch(apiUrl(`/api/entries?id=${id}&userId=${user.id}`), { method: "DELETE" });
     loadEntries();
   }
 
@@ -234,7 +299,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       return next;
     });
     try {
-      await fetch("/api/hive-colors", {
+      await fetch(apiUrl("/api/hive-colors"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: user.id, hive, ...patch }),
@@ -277,7 +342,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
         form.set("feeding", existing.feeding || "");
         form.set("weightKg", existing.weight_kg != null ? String(existing.weight_kg) : "");
         form.set("keepPhotoKeys", JSON.stringify(existing.photo_keys || []));
-        await fetch("/api/entries", { method: "PUT", body: form });
+        await fetch(apiUrl("/api/entries"), { method: "PUT", body: form });
       } else {
         const notes = `${titleLine}\n${changeLines.join("\n")}`;
         const form = new FormData();
@@ -290,7 +355,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
         form.set("colonyStrength", info.colonyStrength || "");
         form.set("varroa", "");
         form.set("feeding", "");
-        await fetch("/api/entries", { method: "POST", body: form });
+        await fetch(apiUrl("/api/entries"), { method: "POST", body: form });
       }
       if (selectedHive === hive) {
         loadEntries();
@@ -364,10 +429,22 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
 
       <div className="user-bar">
         <span>👤 {user.name}</span>
+        {totalUserCount !== null && (
+          <span className="admin-user-count" title="Nur für dich als Admin sichtbar">
+            👥 {totalUserCount} {totalUserCount === 1 ? "Nutzer" : "Nutzer:innen"} insgesamt
+          </span>
+        )}
+        {isAdminUser(user) && (
+          <button className="link-btn" onClick={() => setShowAdminPanel(true)}>
+            Nutzer verwalten
+          </button>
+        )}
         <button className="link-btn" onClick={onSwitchUser}>
           Nutzer wechseln
         </button>
       </div>
+
+      {showAdminPanel && <AdminPanel adminUser={user} onClose={() => setShowAdminPanel(false)} />}
 
       <div className={`status-bar ${isOnline ? "online" : "offline"}`}>
         <span>{isOnline ? "🟢 Online" : "🔴 Kein Internet"}</span>

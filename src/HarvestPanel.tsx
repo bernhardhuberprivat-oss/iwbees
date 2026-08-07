@@ -1,4 +1,5 @@
 import { useEffect, useState, FormEvent } from "react";
+import { apiUrl } from "./apiBase";
 
 export interface HarvestEntry {
   id: number;
@@ -48,7 +49,7 @@ export default function HarvestPanel({ userId, entries, onSaved, onDeleted, onCl
     setSubmitting(true);
     setError("");
     try {
-      const res = await fetch("/api/harvest-entries", {
+      const res = await fetch(apiUrl("/api/harvest-entries"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, entryDate: today(), kg: value }),
@@ -65,7 +66,7 @@ export default function HarvestPanel({ userId, entries, onSaved, onDeleted, onCl
 
   async function handleDelete(id: number) {
     if (!confirm("Diesen Ertragseintrag wirklich löschen?")) return;
-    await fetch(`/api/harvest-entries?id=${id}&userId=${userId}`, { method: "DELETE" });
+    await fetch(apiUrl(`/api/harvest-entries?id=${id}&userId=${userId}`), { method: "DELETE" });
     onDeleted();
   }
 

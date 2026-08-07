@@ -1,4 +1,5 @@
 import type { Context, Config } from "@netlify/functions";
+import { withCors } from "./_cors.mts";
 import { getDatabase } from "@netlify/database";
 import { getStore } from "@netlify/blobs";
 import { randomUUID } from "node:crypto";
@@ -17,7 +18,7 @@ function parseTriBool(v: FormDataEntryValue | null): boolean | null {
   return null;
 }
 
-export default async (req: Request, context: Context) => {
+const handler = async (req: Request, context: Context) => {
   const db = getDatabase();
   const url = new URL(req.url);
 
@@ -212,3 +213,5 @@ export default async (req: Request, context: Context) => {
 export const config: Config = {
   path: "/api/entries",
 };
+
+export default withCors(handler);

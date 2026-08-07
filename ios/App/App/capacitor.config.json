@@ -1,0 +1,9 @@
+{
+	"appId": "com.iwbees.isybee",
+	"appName": "isybee",
+	"webDir": "dist-native",
+	"packageClassList": [
+		"CAPCameraPlugin",
+		"PurchasesPlugin"
+	]
+}

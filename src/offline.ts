@@ -1,4 +1,5 @@
 // Offline-Warteschlange: neue Einträge werden hier zwischengespeichert (IndexedDB),
+import { apiUrl } from "./apiBase";
 // wenn kein Netz da ist, und automatisch hochgeladen, sobald wieder online.
 
 const DB_NAME = "bienentagebuch";
@@ -163,7 +164,7 @@ export async function syncPendingEntries(): Promise<{ synced: number; remaining:
 
   for (const entry of pending) {
     try {
-      const res = await fetch("/api/entries", { method: "POST", body: buildFormData(entry) });
+      const res = await fetch(apiUrl("/api/entries"), { method: "POST", body: buildFormData(entry) });
       if (!res.ok) {
         // vom Server abgelehnt (z.B. ungültige Daten) - aus der Warteschlange entfernen,
         // damit sie nicht endlos hängen bleibt

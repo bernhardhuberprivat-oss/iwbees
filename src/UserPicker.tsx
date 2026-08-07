@@ -1,62 +1,49 @@
-import { useEffect, useState, FormEvent } from "react";
+import { useState, FormEvent } from "react";
 import { CurrentUser, storeUser } from "./userSession";
+import { apiUrl } from "./apiBase";
 
 interface Props {
   onLogin: (user: CurrentUser) => void;
 }
 
-interface UserOption {
-  id: number;
-  name: string;
-}
-
-type Mode = "list" | "login" | "create";
+type Mode = "login" | "create";
 
 export default function UserPicker({ onLogin }: Props) {
-  const [users, setUsers] = useState<UserOption[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
-  const [mode, setMode] = useState<Mode>("list");
-  const [selected, setSelected] = useState<UserOption | null>(null);
+  const [mode, setMode] = useState<Mode>("login");
+  const [name, setName] = useState("");
   const [pin, setPin] = useState("");
   const [pin2, setPin2] = useState("");
-  const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/users")
-      .then((res) => res.json())
-      .then((data) => setUsers(data))
-      .catch(() =>
-        setLoadError(
-          "Keine Verbindung zum Server. Zum ersten Anmelden brauchst du einmal Internet."
-        )
-      )
-      .finally(() => setLoading(false));
-  }, []);
-
-  function chooseUser(user: UserOption) {
-    setSelected(user);
+  function switchMode(next: Mode) {
+    setMode(next);
     setPin("");
+    setPin2("");
     setError("");
-    setMode("login");
+    setInfo("");
   }
 
   async function handleLogin(e: FormEvent) {
     e.preventDefault();
-    if (!selected) return;
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setError("Bitte deinen Namen eingeben.");
+      return;
+    }
     setSubmitting(true);
     setError("");
+    setInfo("");
     try {
-      const res = await fetch("/api/users-login", {
+      const res = await fetch(apiUrl("/api/users-login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: selected.id, pin }),
+        body: JSON.stringify({ name: trimmedName, pin }),
       });
       if (!res.ok) {
-        setError(res.status === 401 ? "Falscher PIN" : "Anmeldung fehlgeschlagen");
+        setError("Name oder PIN falsch");
         return;
       }
       const user = await res.json();
@@ -70,14 +57,18 @@ export default function UserPicker({ onLogin }: Props) {
   }
 
   async function handleDeleteUser() {
-    if (!selected) return;
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setError("Bitte zuerst deinen Namen eingeben.");
+      return;
+    }
     if (pin.length !== 4) {
       setError("Bitte zuerst den 4-stelligen PIN eingeben.");
       return;
     }
     if (
       !confirm(
-        `Nutzer "${selected.name}" wirklich löschen? Alle Stöcke, Einträge und Fotos dieses Nutzers werden dabei unwiderruflich gelöscht.`
+        `Nutzer "${trimmedName}" wirklich löschen? Alle Stöcke, Einträge und Fotos dieses Nutzers werden dabei unwiderruflich gelöscht.`
       )
     ) {
       return;
@@ -85,20 +76,20 @@ export default function UserPicker({ onLogin }: Props) {
 
     setDeleting(true);
     setError("");
+    setInfo("");
     try {
-      const res = await fetch("/api/users", {
+      const res = await fetch(apiUrl("/api/users"), {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: selected.id, pin }),
+        body: JSON.stringify({ name: trimmedName, pin }),
       });
       if (!res.ok) {
-        setError(res.status === 401 ? "Falscher PIN" : "Löschen fehlgeschlagen");
+        setError("Name oder PIN falsch");
         return;
       }
-      setUsers((prev) => prev.filter((u) => u.id !== selected.id));
-      setSelected(null);
+      setName("");
       setPin("");
-      setMode("list");
+      setInfo("Nutzer wurde gelöscht.");
     } catch {
       setError("Keine Verbindung – zum Löschen brauchst du einmal Internet.");
     } finally {
@@ -109,6 +100,7 @@ export default function UserPicker({ onLogin }: Props) {
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
     setError("");
+    setInfo("");
 
     const trimmedName = name.trim();
     if (!trimmedName) {
@@ -126,7 +118,7 @@ export default function UserPicker({ onLogin }: Props) {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/users", {
+      const res = await fetch(apiUrl("/api/users"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: trimmedName, pin }),
@@ -149,38 +141,19 @@ export default function UserPicker({ onLogin }: Props) {
     <div className="user-picker">
       <h2>Wer bist du?</h2>
 
-      {mode === "list" && (
-        <>
-          {loading && <p className="muted">Lade Nutzer…</p>}
-          {loadError && <p className="error">{loadError}</p>}
-          {!loading && !loadError && users.length === 0 && (
-            <p className="muted">Noch keine Nutzer angelegt.</p>
-          )}
-          <div className="user-list">
-            {users.map((u) => (
-              <button key={u.id} className="user-option" onClick={() => chooseUser(u)}>
-                🐝 {u.name}
-              </button>
-            ))}
-          </div>
-          <button
-            className="user-option new-user"
-            onClick={() => {
-              setMode("create");
-              setName("");
-              setPin("");
-              setPin2("");
-              setError("");
-            }}
-          >
-            + Neuer Nutzer
-          </button>
-        </>
-      )}
-
-      {mode === "login" && selected && (
+      {mode === "login" && (
         <form className="user-form" onSubmit={handleLogin}>
-          <p className="user-form-title">🐝 {selected.name}</p>
+          <label>
+            Name
+            <input
+              type="text"
+              autoFocus
+              autoCapitalize="words"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="z.B. Bernhard"
+            />
+          </label>
           <label>
             4-stelliger PIN
             <input
@@ -188,15 +161,15 @@ export default function UserPicker({ onLogin }: Props) {
               inputMode="numeric"
               pattern="\d{4}"
               maxLength={4}
-              autoFocus
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
             />
           </label>
           {error && <p className="error">{error}</p>}
+          {info && <p className="info">{info}</p>}
           <div className="user-form-actions">
-            <button type="button" className="secondary" onClick={() => setMode("list")}>
-              Zurück
+            <button type="button" className="secondary" onClick={() => switchMode("create")}>
+              Neuer Nutzer
             </button>
             <button type="submit" disabled={submitting || deleting || pin.length !== 4}>
               {submitting ? "Prüfe…" : "Anmelden"}
@@ -247,7 +220,7 @@ export default function UserPicker({ onLogin }: Props) {
           </label>
           {error && <p className="error">{error}</p>}
           <div className="user-form-actions">
-            <button type="button" className="secondary" onClick={() => setMode("list")}>
+            <button type="button" className="secondary" onClick={() => switchMode("login")}>
               Zurück
             </button>
             <button type="submit" disabled={submitting}>

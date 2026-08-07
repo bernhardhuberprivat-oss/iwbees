@@ -1,7 +1,8 @@
 import type { Context, Config } from "@netlify/functions";
+import { withCors } from "./_cors.mts";
 import { getDatabase } from "@netlify/database";
 
-export default async (req: Request, context: Context) => {
+const handler = async (req: Request, context: Context) => {
   const db = getDatabase();
   const url = new URL(req.url);
 
@@ -124,3 +125,5 @@ export default async (req: Request, context: Context) => {
 export const config: Config = {
   path: "/api/hive-colors",
 };
+
+export default withCors(handler);

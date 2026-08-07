@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, FormEvent } from "react";
+import { apiUrl } from "./apiBase";
 
 interface HarvestEntry {
   year: number;
@@ -24,7 +25,7 @@ export default function YearlyHarvest({ userId }: Props) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/harvest?userId=${userId}`);
+      const res = await fetch(apiUrl(`/api/harvest?userId=${userId}`));
       const data: HarvestEntry[] = await res.json();
       setEntries([...data].sort((a, b) => b.year - a.year));
     } catch {
@@ -49,7 +50,7 @@ export default function YearlyHarvest({ userId }: Props) {
     setSubmitting(true);
     setError("");
     try {
-      const res = await fetch("/api/harvest", {
+      const res = await fetch(apiUrl("/api/harvest"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, year, kg: kg ? Number(kg) : null }),
@@ -66,7 +67,7 @@ export default function YearlyHarvest({ userId }: Props) {
 
   async function handleDelete(y: number) {
     if (!confirm(`Ertrag für ${y} wirklich löschen?`)) return;
-    await fetch(`/api/harvest?userId=${userId}&year=${y}`, { method: "DELETE" });
+    await fetch(apiUrl(`/api/harvest?userId=${userId}&year=${y}`), { method: "DELETE" });
     load();
   }
 

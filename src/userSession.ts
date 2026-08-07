@@ -5,6 +5,11 @@ export interface CurrentUser {
   id: number;
   name: string;
   hiveCount?: number;
+  // ISO-Zeitstempel der Kontoerstellung, wird für die 30-Tage-Testphase in der
+  // nativen iOS-App gebraucht (src/subscription.ts).
+  createdAt?: string;
+  // true, wenn ein Admin diesem Konto das Abo geschenkt hat (siehe subscription.ts).
+  isGifted?: boolean;
 }
 
 const KEY = "bienentagebuch:currentUser";
