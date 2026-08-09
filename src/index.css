@@ -378,6 +378,58 @@ header h1 {
   padding: 6px 14px;
 }
 
+.harvest-year-badge-btn {
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.15s ease;
+}
+
+.harvest-year-badge-btn:hover {
+  background: #fbe6bd;
+  transform: translateY(-1px);
+}
+
+.harvest-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.harvest-summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.harvest-summary-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.95rem;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.harvest-summary-label {
+  min-width: 100px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.harvest-summary-kg {
+  font-weight: 700;
+  flex: 1;
+}
+
+.harvest-summary-total {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 2px solid var(--honey);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--honey-dark);
+  text-align: right;
+}
+
 .harvest-overlay {
   position: fixed;
   inset: 0;

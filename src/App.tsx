@@ -4,6 +4,7 @@ import NewEntryForm from "./NewEntryForm";
 import EntryList from "./EntryList";
 import ColorPicker from "./ColorPicker";
 import HarvestPanel, { HarvestEntry } from "./HarvestPanel";
+import HarvestSummary from "./HarvestSummary";
 import UserPicker from "./UserPicker";
 import Paywall from "./Paywall";
 import AdminPanel from "./AdminPanel";
@@ -116,6 +117,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   const [harvestEntries, setHarvestEntries] = useState<HarvestEntry[]>([]);
   const [harvestYearTotal, setHarvestYearTotal] = useState(0);
   const [showHarvestPanel, setShowHarvestPanel] = useState(false);
+  const [showHarvestSummary, setShowHarvestSummary] = useState(false);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [hiveInfo, setHiveInfo] = useState<Record<number, HiveInfo>>({});
@@ -506,9 +508,13 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
         <button type="button" className="harvest-open-btn" onClick={() => setShowHarvestPanel(true)}>
           🍯 Ertrag eingeben
         </button>
-        <span className="harvest-year-badge">
+        <button
+          type="button"
+          className="harvest-year-badge harvest-year-badge-btn"
+          onClick={() => setShowHarvestSummary(true)}
+        >
           🍯 {harvestYearTotal} kg ({new Date().getFullYear()})
-        </span>
+        </button>
       </div>
 
       {showHarvestPanel && (
@@ -520,6 +526,14 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
           onSaved={loadHarvest}
           onDeleted={loadHarvest}
           onClose={() => setShowHarvestPanel(false)}
+        />
+      )}
+
+      {showHarvestSummary && (
+        <HarvestSummary
+          userId={user.id}
+          hiveInfo={hiveInfo}
+          onClose={() => setShowHarvestSummary(false)}
         />
       )}
 

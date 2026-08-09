@@ -26,7 +26,35 @@ const handler = async (req: Request, context: Context) => {
       WHERE user_id = ${userId} AND EXTRACT(YEAR FROM entry_date) = ${year}
     `;
 
-    return Response.json({ entries, yearTotal: Number(totalRow?.total || 0) });
+    // Für die Auswertung (Klick auf den Ertrags-Badge): Summe je Stock im gewählten Jahr,
+    // separat die Summe der "Gesamt"-Einträge (ohne Stock-Zuordnung, hive IS NULL), sowie
+    // alle Jahre, für die überhaupt Erträge erfasst sind (für die Jahresauswahl dort).
+    const perHiveRows = await db.sql`
+      SELECT hive, COALESCE(SUM(kg), 0) AS kg FROM harvest_entries
+      WHERE user_id = ${userId} AND EXTRACT(YEAR FROM entry_date) = ${year} AND hive IS NOT NULL
+      GROUP BY hive
+      ORDER BY hive
+    `;
+
+    const [gesamtOnlyRow] = await db.sql`
+      SELECT COALESCE(SUM(kg), 0) AS kg FROM harvest_entries
+      WHERE user_id = ${userId} AND EXTRACT(YEAR FROM entry_date) = ${year} AND hive IS NULL
+    `;
+
+    const yearRows = await db.sql`
+      SELECT DISTINCT EXTRACT(YEAR FROM entry_date)::int AS year FROM harvest_entries
+      WHERE user_id = ${userId}
+      ORDER BY year DESC
+    `;
+
+    return Response.json({
+      entries,
+      yearTotal: Number(totalRow?.total || 0),
+      year,
+      perHive: perHiveRows.map((r) => ({ hive: Number(r.hive), kg: Number(r.kg) })),
+      gesamtOnlyKg: Number(gesamtOnlyRow?.kg || 0),
+      years: yearRows.map((r) => Number(r.year)),
+    });
   }
 
   if (req.method === "POST") {
