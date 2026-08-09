@@ -1,0 +1,25 @@
+# Abhängigkeiten
+node_modules/
+
+# Build-Ausgaben
+dist/
+dist-native/
+
+# Enthält den RevenueCat-Key, wird bewusst nicht eingecheckt
+.env.native
+.env
+.env.local
+
+# Netlify
+.netlify/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+*.log

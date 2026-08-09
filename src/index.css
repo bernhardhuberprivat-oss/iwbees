@@ -21,7 +21,7 @@ body {
 .app {
   max-width: 900px;
   margin: 0 auto;
-  padding: 24px 16px 64px;
+  padding: calc(24px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(64px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
 }
 
 header {
@@ -328,6 +328,16 @@ header h1 {
   transform: translateY(-1px);
 }
 
+.hive-tabs button.unmarked {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--card),
+    var(--card) 6px,
+    #f1e6c9 6px,
+    #f1e6c9 12px
+  );
+}
+
 .hive-tabs button.active {
   background: var(--honey);
   border-color: var(--honey-dark);
@@ -413,6 +423,41 @@ header h1 {
   margin: 0 0 16px;
 }
 
+.harvest-mode-toggle {
+  margin-bottom: 16px;
+}
+
+.harvest-stock-hint {
+  margin: -4px 0 0;
+  font-size: 0.8rem;
+}
+
+.harvest-stock-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.harvest-stock-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.harvest-stock-row .hive-badge {
+  min-width: 84px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.harvest-stock-row input {
+  flex: 1;
+  min-width: 0;
+}
+
 .harvest-panel-form {
   display: flex;
   flex-direction: column;
@@ -460,6 +505,39 @@ header h1 {
   gap: 6px;
   max-height: 220px;
   overflow-y: auto;
+}
+
+.harvest-history-day {
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 8px;
+  margin-bottom: 2px;
+}
+
+.harvest-history-day:last-child {
+  border-bottom: none;
+}
+
+.harvest-history-day-date {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #8a7256;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
+}
+
+.harvest-history-day-total {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--honey-dark);
+  text-align: right;
+  margin-top: 2px;
+}
+
+.harvest-history-label {
+  min-width: 78px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .harvest-history-row {
@@ -1098,6 +1176,7 @@ header h1 {
 .hive-badge {
   background: var(--honey);
   color: white;
+  border: 2px solid transparent;
   border-radius: 999px;
   padding: 2px 10px;
   font-size: 0.8rem;

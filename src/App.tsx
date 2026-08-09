@@ -9,7 +9,7 @@ import Paywall from "./Paywall";
 import AdminPanel from "./AdminPanel";
 import { CurrentUser, getStoredUser, clearStoredUser, storeUser } from "./userSession";
 import { cacheGet, cacheSet, getPendingEntries, deletePendingEntry, pendingToDisplayEntry, syncPendingEntries } from "./offline";
-import { readableTextColor } from "./colorUtils";
+import { readableTextColor, hiveRingColor } from "./colorUtils";
 import { apiUrl } from "./apiBase";
 import { isTrialActive, checkSubscription, isAdminUser } from "./subscription";
 
@@ -367,6 +367,15 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
 
   const selectedInfo = typeof selectedHive === "number" ? hiveInfo[selectedHive] : undefined;
 
+  // Solange für den ausgewählten Stock noch kein einziger echter Tageseintrag existiert
+  // (die automatischen Stammdaten-Änderungsprotokolle zählen nicht mit), zeigt der Button
+  // eine einladende Erstformulierung. Sobald der erste Eintrag angelegt wurde, steht beim
+  // nächsten Aufruf wieder der normale Text da - ganz ohne eigenes "schon mal besucht"-Flag,
+  // einfach weil dann entries.length für diesen Stock > 0 ist.
+  const isFirstEntryForSelectedHive =
+    typeof selectedHive === "number" &&
+    !entries.some((e) => e.hive === selectedHive && !e.notes?.startsWith(STOCK_CHANGE_PREFIX));
+
   // Zeigt im Stammdaten-Fenster nur an, ob laut dem letzten Tageseintrag mit erfasster
   // Varroamilben-Angabe aktuell "Ja" gilt - verschwindet automatisch, sobald ein neuerer
   // Eintrag "Nein" erfasst. Rein abgeleitet, hier nicht editierbar (nur im Tageseintrag).
@@ -474,13 +483,16 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
           const isActive = selectedHive === h;
           const style = color
             ? isActive
-              ? { boxShadow: `0 0 0 3px ${color}` }
-              : { background: color, borderColor: color, color: readableTextColor(color) }
+              ? { boxShadow: `0 0 0 3px ${hiveRingColor(color)}` }
+              : { background: color, borderColor: hiveRingColor(color), color: readableTextColor(color) }
             : undefined;
+          const className = [isActive ? "active" : "", !color ? "unmarked" : ""]
+            .filter(Boolean)
+            .join(" ");
           return (
             <button
               key={h}
-              className={isActive ? "active" : ""}
+              className={className}
               style={style}
               onClick={() => setSelectedHive(h)}
             >
@@ -503,6 +515,8 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
         <HarvestPanel
           userId={user.id}
           entries={harvestEntries}
+          hiveCount={hiveCount}
+          hiveInfo={hiveInfo}
           onSaved={loadHarvest}
           onDeleted={loadHarvest}
           onClose={() => setShowHarvestPanel(false)}
@@ -549,7 +563,11 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
                 }
                 onClick={() => setShowNewEntryForm((v) => !v)}
               >
-                {showNewEntryForm ? "Neuer Tageseintrag ✕" : "+ Neuer Tageseintrag"}
+                {showNewEntryForm
+                  ? "Neuer Tageseintrag ✕"
+                  : isFirstEntryForSelectedHive
+                  ? "+ Den ersten Tagebucheintrag machen"
+                  : "+ Neuer Tageseintrag"}
               </button>
             )}
           </div>

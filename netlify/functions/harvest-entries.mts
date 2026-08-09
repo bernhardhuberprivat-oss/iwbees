@@ -15,10 +15,10 @@ const handler = async (req: Request, context: Context) => {
     const year = yearParam ? Number(yearParam) : new Date().getFullYear();
 
     const entries = await db.sql`
-      SELECT id, entry_date, kg FROM harvest_entries
+      SELECT id, entry_date, kg, hive FROM harvest_entries
       WHERE user_id = ${userId}
       ORDER BY entry_date DESC, id DESC
-      LIMIT 20
+      LIMIT 40
     `;
 
     const [totalRow] = await db.sql`
@@ -34,6 +34,10 @@ const handler = async (req: Request, context: Context) => {
     const userId = Number(body.userId);
     const entryDate = String(body.entryDate || "");
     const kg = Number(body.kg);
+    // hive = null bedeutet "Gesamtertrag" (wie bisher), eine Zahl bedeutet Ertrag für
+    // genau diesen einen Stock.
+    const hive =
+      body.hive === null || body.hive === undefined || body.hive === "" ? null : Number(body.hive);
 
     if (!userId || !entryDate) {
       return new Response("userId und entryDate sind erforderlich", { status: 400 });
@@ -41,11 +45,14 @@ const handler = async (req: Request, context: Context) => {
     if (!kg || kg <= 0) {
       return new Response("kg muss eine positive Zahl sein", { status: 400 });
     }
+    if (hive !== null && (!Number.isInteger(hive) || hive < 1)) {
+      return new Response("hive muss eine positive ganze Zahl sein", { status: 400 });
+    }
 
     const [row] = await db.sql`
-      INSERT INTO harvest_entries (user_id, entry_date, kg)
-      VALUES (${userId}, ${entryDate}, ${kg})
-      RETURNING id, entry_date, kg
+      INSERT INTO harvest_entries (user_id, entry_date, kg, hive)
+      VALUES (${userId}, ${entryDate}, ${kg}, ${hive})
+      RETURNING id, entry_date, kg, hive
     `;
 
     return Response.json(row, { status: 201 });
