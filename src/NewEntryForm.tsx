@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import DatePicker from "./DatePicker";
 import { addPendingEntry } from "./offline";
+import { compressImages } from "./imageCompression";
 import { readableTextColor } from "./colorUtils";
 import { getQueenColorForYear } from "./types";
 import { apiUrl } from "./apiBase";
@@ -87,7 +88,9 @@ export default function NewEntryForm({
     setSubmitting(true);
     setError("");
     setInfo("");
-    const photoList = photos ? Array.from(photos) : [];
+    // Fotos vor dem Hochladen verkleinern - unkomprimierte iPhone-Fotos können sonst am
+    // ~6-MB-Anfragelimit der Netlify Function scheitern (siehe imageCompression.ts).
+    const photoList = photos ? await compressImages(Array.from(photos)) : [];
     const queenColor = queenColorInfo?.hex || null;
 
     try {

@@ -2,6 +2,7 @@ import { useState, FormEvent } from "react";
 import DatePicker from "./DatePicker";
 import QueenColorField from "./QueenColorField";
 import { updatePendingEntryFields } from "./offline";
+import { compressImages } from "./imageCompression";
 import { Entry, getQueenColorForYear } from "./types";
 import { apiUrl } from "./apiBase";
 
@@ -52,15 +53,15 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
     setSubmitting(true);
     setError("");
     const queenColor = getQueenColorForYear(queenYear)?.hex || null;
+    // Wie beim Neuanlegen: Fotos vor dem Hochladen verkleinern (siehe imageCompression.ts).
+    const compressedNewPhotos = newPhotos ? await compressImages(Array.from(newPhotos)) : [];
 
     try {
       if (isPending) {
         const localId = -entry.id;
         const total = entry.localPhotoUrls?.length || 0;
         const keepIndices = Array.from({ length: total }, (_, i) => i).filter((i) => !removedIndices.includes(i));
-        const newFiles = newPhotos
-          ? Array.from(newPhotos).map((f) => ({ name: f.name, type: f.type, blob: f }))
-          : [];
+        const newFiles = compressedNewPhotos.map((f) => ({ name: f.name, type: f.type, blob: f }));
         await updatePendingEntryFields(
           localId,
           {
@@ -104,7 +105,7 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
         form.set("varroaMites", varroaMites === "" ? "" : varroaMites === "ja" ? "true" : "false");
         const keepKeys = (entry.photo_keys || []).filter((k) => !removedKeys.includes(k));
         form.set("keepPhotoKeys", JSON.stringify(keepKeys));
-        if (newPhotos) Array.from(newPhotos).forEach((f) => form.append("photos", f));
+        compressedNewPhotos.forEach((f) => form.append("photos", f));
 
         const res = await fetch(apiUrl("/api/entries"), { method: "PUT", body: form });
         if (!res.ok) throw new Error(await res.text());
