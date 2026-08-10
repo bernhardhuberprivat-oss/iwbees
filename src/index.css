@@ -874,7 +874,7 @@ header h1 {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 7px 10px;
-  font-size: 0.95rem;
+  font-size: 16px;
   font-family: inherit;
   max-width: 130px;
 }
@@ -895,6 +895,11 @@ header h1 {
 
 .queen-year-field input[type="number"] {
   max-width: 110px;
+  font-size: 16px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
 }
 
 .queen-bee-icon {
