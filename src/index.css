@@ -18,6 +18,22 @@ body {
   color: var(--dark);
 }
 
+/* Keeps the status bar area covered with the app background at all times,
+   even when the page is scrolled — prevents scrolled-up content (e.g. the
+   hive-tab bar) from visually overlapping the clock/battery status bar in
+   the native app, where the WebView draws edge-to-edge. */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top);
+  background: var(--bg);
+  z-index: 9999;
+  pointer-events: none;
+}
+
 .app {
   max-width: 900px;
   margin: 0 auto;
