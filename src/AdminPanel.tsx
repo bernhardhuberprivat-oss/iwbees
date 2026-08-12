@@ -69,6 +69,26 @@ export default function AdminPanel({ adminUser, onClose }: Props) {
     }
   }
 
+  async function expireTrial(target: AdminUserRow) {
+    if (
+      !window.confirm(
+        `Testphase von "${target.name}" künstlich auf abgelaufen setzen (Beitrittsdatum wird um 40 Tage zurückgesetzt)? Nur für Demo-/Testkonten verwenden, z. B. für die Apple-App-Prüfung.`
+      )
+    ) {
+      return;
+    }
+    setBusyId(target.id);
+    setError("");
+    try {
+      const updated = await callAdmin("backdate", { targetUserId: target.id, days: 40 });
+      setUsers((prev) => prev.map((u) => (u.id === target.id ? { ...u, createdAt: updated.createdAt } : u)));
+    } catch (err: any) {
+      setError(err.message || "Aktion fehlgeschlagen.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   return (
     <div className="admin-panel-overlay">
       <div className="admin-panel">
@@ -112,6 +132,7 @@ export default function AdminPanel({ adminUser, onClose }: Props) {
                   <th>Dabei seit</th>
                   <th>Stöcke</th>
                   <th>Abo</th>
+                  <th>Test</th>
                 </tr>
               </thead>
               <tbody>
@@ -132,6 +153,17 @@ export default function AdminPanel({ adminUser, onClose }: Props) {
                           : u.isGifted
                           ? "🎁 Geschenkt – entziehen"
                           : "Abo schenken"}
+                      </button>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="link-btn"
+                        title="Nur für Demo-/Testkonten: Beitrittsdatum um 40 Tage zurücksetzen, damit die Testphase sofort abgelaufen ist."
+                        onClick={() => expireTrial(u)}
+                        disabled={busyId === u.id}
+                      >
+                        {busyId === u.id ? "…" : "Trial ablaufen lassen"}
                       </button>
                     </td>
                   </tr>

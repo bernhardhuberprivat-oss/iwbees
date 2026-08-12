@@ -64,6 +64,34 @@ const handler = async (req: Request, context: Context) => {
     );
   }
 
+  if (action === "backdate") {
+    // Nur für Test-/Demo-Konten gedacht (z. B. für Apple-App-Prüfung ein Konto mit
+    // bereits abgelaufener Testphase bereitzustellen) - setzt created_at künstlich
+    // zurück, damit isTrialActive() im Frontend "false" liefert.
+    const targetUserId = Number(body.targetUserId);
+    const days = Number(body.days);
+    if (!targetUserId) {
+      return new Response("targetUserId ist erforderlich", { status: 400 });
+    }
+    if (!Number.isFinite(days) || days < 1 || days > 3650) {
+      return new Response("days muss zwischen 1 und 3650 liegen", { status: 400 });
+    }
+    const [user] = await db.sql`
+      UPDATE users SET created_at = NOW() - (${days} * INTERVAL '1 day') WHERE id = ${targetUserId}
+      RETURNING id, name, hive_count, created_at, is_gifted
+    `;
+    if (!user) {
+      return new Response("Nutzer nicht gefunden", { status: 404 });
+    }
+    return Response.json({
+      id: user.id,
+      name: user.name,
+      hiveCount: user.hive_count,
+      createdAt: user.created_at,
+      isGifted: user.is_gifted,
+    });
+  }
+
   if (action === "grant" || action === "revoke") {
     const targetUserId = Number(body.targetUserId);
     if (!targetUserId) {
