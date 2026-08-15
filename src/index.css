@@ -143,6 +143,22 @@ header h1 {
   cursor: default;
 }
 
+.app-legal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 16px 28px;
+  color: #ab9779;
+  font-size: 0.8rem;
+}
+
+.app-legal-footer .link-btn {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #ab9779;
+}
+
 .delete-user-btn {
   display: block;
   margin: 14px auto 0;
@@ -1658,6 +1674,28 @@ header h1 {
   font-weight: 700;
   font-size: 1.1rem;
   margin: 16px 0;
+}
+
+.paywall-terms {
+  color: #5a4a35;
+  font-size: 0.85rem;
+  margin: 0 0 16px;
+}
+
+.paywall-legal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.paywall-legal button.link {
+  margin-top: 0;
+}
+
+.paywall-legal-sep {
+  color: #ab9779;
 }
 
 .paywall button.primary {

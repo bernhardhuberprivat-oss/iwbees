@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CurrentUser } from "./userSession";
-import { purchaseSubscription, restorePurchases } from "./subscription";
+import { EULA_URL, PRIVACY_URL, openLegalLink, purchaseSubscription, restorePurchases } from "./subscription";
 
 interface Props {
   user: CurrentUser;
@@ -52,7 +52,19 @@ export default function Paywall({ user, onUnlocked, onSwitchUser }: Props) {
           <li>Offline-Nutzung mit automatischer Synchronisierung</li>
           <li>Jahresauswertung und Erntestatistik</li>
         </ul>
-        <p className="paywall-price">0,99&nbsp;€ / Monat, jederzeit kündbar</p>
+        <p className="paywall-price">0,99&nbsp;€ / Monat, automatische Verlängerung</p>
+        <p className="paywall-terms">isybee Monatsabo &middot; Laufzeit: 1 Monat &middot; jederzeit kündbar</p>
+        <div className="paywall-legal">
+          <button type="button" className="link" onClick={() => openLegalLink(EULA_URL)}>
+            Nutzungsbedingungen
+          </button>
+          <span className="paywall-legal-sep" aria-hidden="true">
+            ·
+          </span>
+          <button type="button" className="link" onClick={() => openLegalLink(PRIVACY_URL)}>
+            Datenschutzerklärung
+          </button>
+        </div>
         <button className="primary" onClick={handleSubscribe} disabled={busy}>
           {busy ? "Einen Moment …" : "Jetzt abonnieren"}
         </button>

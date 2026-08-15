@@ -7,6 +7,29 @@ import { CurrentUser } from "./userSession";
 const TRIAL_DAYS = 30;
 const ENTITLEMENT_ID = "premium";
 
+// Von Apple für Auto-renewable-Subscriptions verlangte Links (Guideline 3.1.2), die
+// direkt im Kaufbildschirm (Paywall.tsx) angezeigt werden müssen - nicht nur in den
+// App-Store-Metadaten. EULA ist Apples Standard-EULA (kein eigener Text nötig).
+export const EULA_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
+export const PRIVACY_URL = "https://iwbees.netlify.app/datenschutz.html";
+
+// Öffnet einen externen Link (EULA/Datenschutz) verlässlich im System-Browser statt in
+// der eingebetteten WKWebView der App - nativ über das Capacitor-Browser-Plugin, im
+// Web-Build per normalem window.open. So bleibt der Link "funktional" im Sinne von
+// Apples Review auch dann, wenn die App keine eigene In-App-Navigation dafür hat.
+export async function openLegalLink(url: string): Promise<void> {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const { Browser } = await import("@capacitor/browser");
+      await Browser.open({ url });
+      return;
+    } catch (err) {
+      console.warn("Browser-Plugin fehlgeschlagen, Fallback auf window.open:", err);
+    }
+  }
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
 // Kommagetrennte Liste von Benutzer-IDs bzw. Anzeigenamen, die dauerhaft von der
 // Bezahlschranke ausgenommen sind - für Bernhards eigenes Konto gedacht. Wird zur
 // Build-Zeit über .env.native gesetzt: VITE_ADMIN_USER_IDS (z. B. "1" oder "1,4")

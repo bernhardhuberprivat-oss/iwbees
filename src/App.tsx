@@ -12,7 +12,7 @@ import { CurrentUser, getStoredUser, clearStoredUser, storeUser } from "./userSe
 import { cacheGet, cacheSet, getPendingEntries, deletePendingEntry, pendingToDisplayEntry, syncPendingEntries } from "./offline";
 import { readableTextColor, hiveRingColor } from "./colorUtils";
 import { apiUrl } from "./apiBase";
-import { isTrialActive, checkSubscription, isAdminUser } from "./subscription";
+import { isTrialActive, checkSubscription, isAdminUser, EULA_URL, PRIVACY_URL, openLegalLink } from "./subscription";
 
 function formatDateDE(dateStr: string) {
   const [y, m, d] = dateStr.split("-");
@@ -614,6 +614,16 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
           />
         </section>
       </main>
+
+      <footer className="app-legal-footer">
+        <button type="button" className="link-btn" onClick={() => openLegalLink(EULA_URL)}>
+          Nutzungsbedingungen
+        </button>
+        <span aria-hidden="true">·</span>
+        <button type="button" className="link-btn" onClick={() => openLegalLink(PRIVACY_URL)}>
+          Datenschutzerklärung
+        </button>
+      </footer>
     </div>
   );
 }

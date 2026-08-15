@@ -3,6 +3,7 @@
 	"appName": "isybee",
 	"webDir": "dist-native",
 	"packageClassList": [
+		"CAPBrowserPlugin",
 		"CAPCameraPlugin",
 		"PurchasesPlugin"
 	]
