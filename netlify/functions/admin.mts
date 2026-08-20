@@ -2,6 +2,7 @@ import type { Context, Config } from "@netlify/functions";
 import { withCors } from "./_cors.mts";
 import { getDatabase } from "@netlify/database";
 import { createHash } from "node:crypto";
+import { ensureSubscriptionColumns } from "./_subscriptionSchema.mts";
 
 function hashPin(pin: string) {
   return createHash("sha256").update(pin).digest("hex");
@@ -66,8 +67,13 @@ const handler = async (req: Request, context: Context) => {
 
   if (action === "backdate") {
     // Nur für Test-/Demo-Konten gedacht (z. B. für Apple-App-Prüfung ein Konto mit
-    // bereits abgelaufener Testphase bereitzustellen) - setzt created_at künstlich
-    // zurück, damit isTrialActive() im Frontend "false" liefert.
+    // bereits abgelaufener Testphase bereitzustellen) - setzt created_at (nativer
+    // Trial-Anker) UND web_trial_start (Web-Trial-Anker, siehe subscription.ts
+    // trialAnchor()) künstlich zurück, damit isTrialActive() im Frontend auf BEIDEN
+    // Plattformen "false" liefert. Vorher wurde hier nur created_at zurückgesetzt -
+    // für Web-Konten blieb web_trial_start dadurch unverändert und die Testphase
+    // erschien fälschlich weiter aktiv.
+    await ensureSubscriptionColumns(db);
     const targetUserId = Number(body.targetUserId);
     const days = Number(body.days);
     if (!targetUserId) {
@@ -77,8 +83,11 @@ const handler = async (req: Request, context: Context) => {
       return new Response("days muss zwischen 1 und 3650 liegen", { status: 400 });
     }
     const [user] = await db.sql`
-      UPDATE users SET created_at = NOW() - (${days} * INTERVAL '1 day') WHERE id = ${targetUserId}
-      RETURNING id, name, hive_count, created_at, is_gifted
+      UPDATE users
+      SET created_at = NOW() - (${days} * INTERVAL '1 day'),
+          web_trial_start = NOW() - (${days} * INTERVAL '1 day')
+      WHERE id = ${targetUserId}
+      RETURNING id, name, hive_count, created_at, is_gifted, web_trial_start
     `;
     if (!user) {
       return new Response("Nutzer nicht gefunden", { status: 404 });
@@ -89,6 +98,7 @@ const handler = async (req: Request, context: Context) => {
       hiveCount: user.hive_count,
       createdAt: user.created_at,
       isGifted: user.is_gifted,
+      webTrialStart: user.web_trial_start,
     });
   }
 
