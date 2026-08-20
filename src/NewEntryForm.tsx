@@ -5,6 +5,7 @@ import { compressImages } from "./imageCompression";
 import { readableTextColor } from "./colorUtils";
 import { getQueenColorForYear } from "./types";
 import { apiUrl } from "./apiBase";
+import { useT, useLang, dateLocale } from "./i18n";
 
 interface Props {
   userId: number;
@@ -19,15 +20,6 @@ interface Props {
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-function formatDisplay(dateStr: string) {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
 export default function NewEntryForm({
   userId,
   hive,
@@ -38,6 +30,18 @@ export default function NewEntryForm({
   onCreated,
   onClose,
 }: Props) {
+  const t = useT();
+  const { lang } = useLang();
+
+  function formatDisplay(dateStr: string) {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(dateLocale(lang), {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  }
+
   const [entryDate, setEntryDate] = useState(today());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [notes, setNotes] = useState("");
@@ -144,20 +148,22 @@ export default function NewEntryForm({
             varroaMites,
             photos: photoList.map((f) => ({ name: f.name, type: f.type, blob: f })),
           });
-          setInfo("Kein Internet – Eintrag wurde lokal gespeichert und wird automatisch hochgeladen, sobald du wieder online bist.");
+          setInfo(t.entryForm.offlineSaved);
           triggerBeeFlight();
           resetForm();
           onCreated();
         } catch {
-          setError("Eintrag konnte weder gesendet noch lokal gespeichert werden.");
+          setError(t.entryForm.saveFailedTotal);
         }
       } else {
-        setError(err instanceof Error ? err.message : "Fehler beim Speichern");
+        setError(err instanceof Error ? err.message : t.common.genericSaveError);
       }
     } finally {
       setSubmitting(false);
     }
   }
+
+  const hiveLabel = hiveName || t.common.hiveFallback(hive);
 
   return (
     <form className="entry-form" onSubmit={handleSubmit}>
@@ -165,14 +171,14 @@ export default function NewEntryForm({
         className="entry-form-heading"
         style={hiveColor ? { background: hiveColor, color: readableTextColor(hiveColor) } : undefined}
       >
-        Neuer Tageseintrag – {hiveName || `Stock ${hive}`}
+        {t.entryForm.newEntryHeading(hiveLabel)}
         {onClose && (
           <button
             type="button"
             className="entry-form-close"
             onClick={onClose}
-            aria-label="Schließen, ohne zu speichern"
-            title="Schließen, ohne zu speichern"
+            aria-label={t.entryForm.closeNoSave}
+            title={t.entryForm.closeNoSave}
           >
             ✕
           </button>
@@ -180,7 +186,7 @@ export default function NewEntryForm({
       </h2>
 
       <div className="full-width">
-        <span className="field-label">Datum</span>
+        <span className="field-label">{t.entryForm.date}</span>
         <div className="date-toggle">
           <button
             type="button"
@@ -190,14 +196,14 @@ export default function NewEntryForm({
               setShowDatePicker(false);
             }}
           >
-            Heute · {formatDisplay(today())}
+            {t.entryForm.today(formatDisplay(today()))}
           </button>
           <button
             type="button"
             className={entryDate !== today() ? "active" : ""}
             onClick={() => setShowDatePicker((v) => !v)}
           >
-            📅 {entryDate !== today() ? formatDisplay(entryDate) : "Individuelles Datum"}
+            {t.entryForm.customDate(formatDisplay(entryDate), entryDate !== today())}
           </button>
         </div>
         {showDatePicker && (
@@ -212,30 +218,30 @@ export default function NewEntryForm({
       </div>
 
       <div className="sightings-section">
-        <span className="color-picker-label">Sichtungen:</span>
+        <span className="color-picker-label">{t.entryForm.sightings}</span>
 
         <div className="sightings-checks">
           <label className="sighting-check">
             <input type="checkbox" checked={sightingQueen} onChange={(e) => setSightingQueen(e.target.checked)} />
-            Königin
+            {t.entryForm.sightingQueen}
           </label>
           <label className="sighting-check">
             <input type="checkbox" checked={sightingLarvae} onChange={(e) => setSightingLarvae(e.target.checked)} />
-            Larven
+            {t.entryForm.sightingLarvae}
           </label>
           <label className="sighting-check">
             <input type="checkbox" checked={sightingEggs} onChange={(e) => setSightingEggs(e.target.checked)} />
-            Stifte
+            {t.entryForm.sightingEggs}
           </label>
           <label className="sighting-check">
             <input type="checkbox" checked={sightingBrood} onChange={(e) => setSightingBrood(e.target.checked)} />
-            Brut
+            {t.entryForm.sightingBrood}
           </label>
         </div>
 
         <div className="sightings-numbers">
           <label className="sighting-number">
-            Besetzte Waben
+            {t.entryForm.occupiedCombs}
             <input
               type="number"
               min={0}
@@ -244,7 +250,7 @@ export default function NewEntryForm({
             />
           </label>
           <label className="sighting-number">
-            Weiselzellen
+            {t.entryForm.queenCells}
             <input
               type="number"
               min={0}
@@ -253,11 +259,11 @@ export default function NewEntryForm({
             />
           </label>
           <label className="sighting-number">
-            Varroamilben
+            {t.entryForm.varroaMites}
             <select value={varroaMites} onChange={(e) => setVarroaMites(e.target.value as "" | "ja" | "nein")}>
-              <option value="">–</option>
-              <option value="ja">Ja</option>
-              <option value="nein">Nein</option>
+              <option value="">{t.common.none}</option>
+              <option value="ja">{t.common.yes}</option>
+              <option value="nein">{t.common.no}</option>
             </select>
           </label>
         </div>
@@ -266,10 +272,10 @@ export default function NewEntryForm({
       <div className="form-row">
         {varroaMites === "ja" && (
           <label>
-            Varroabefallbehandlung
+            {t.entryForm.varroaTreatment}
             <input
               type="text"
-              placeholder="z.B. gering, behandelt"
+              placeholder={t.entryForm.varroaTreatmentPlaceholder}
               value={varroa}
               onChange={(e) => setVarroa(e.target.value)}
             />
@@ -277,22 +283,22 @@ export default function NewEntryForm({
         )}
 
         <label>
-          Fütterung
+          {t.entryForm.feeding}
           <input
             type="text"
-            placeholder="z.B. 2L Sirup"
+            placeholder={t.entryForm.feedingPlaceholder}
             value={feeding}
             onChange={(e) => setFeeding(e.target.value)}
           />
         </label>
 
         <label>
-          Stockgewicht (kg)
+          {t.entryForm.weight}
           <input
             type="number"
             step="0.1"
             min="0"
-            placeholder="z.B. 24.5"
+            placeholder={t.entryForm.weightPlaceholder}
             value={weightKg}
             onChange={(e) => setWeightKg(e.target.value)}
           />
@@ -300,12 +306,12 @@ export default function NewEntryForm({
       </div>
 
       <label className="full-width">
-        Notizen
+        {t.entryForm.notes}
         <textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
       </label>
 
       <label className="full-width">
-        Fotos
+        {t.entryForm.photos}
         <input
           id="photo-input"
           type="file"
@@ -320,7 +326,7 @@ export default function NewEntryForm({
 
       <div className="submit-row">
         <button type="submit" disabled={submitting}>
-          {submitting ? "Speichere…" : "Eintrag speichern"}
+          {submitting ? t.common.saving : t.entryForm.saveEntry}
         </button>
         {flying && (
           <span className="flying-bee" aria-hidden="true">

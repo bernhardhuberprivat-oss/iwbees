@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { COLOR_PALETTE, HIVE_CATEGORIES, Entry, HiveInfo } from "./types";
 import QueenColorField from "./QueenColorField";
 import StockChangeList from "./StockChangeList";
+import { useT } from "./i18n";
 
 interface Props {
   hive: number;
@@ -38,6 +39,7 @@ export default function ColorPicker({
   onQueenYearChange,
   onColonyStrengthChange,
 }: Props) {
+  const t = useT();
   const [name, setName] = useState(currentName || "");
   const [showRecentChanges, setShowRecentChanges] = useState(false);
 
@@ -54,17 +56,15 @@ export default function ColorPicker({
 
   return (
     <div className="color-picker" style={currentColor ? { borderColor: currentColor } : undefined}>
-      <h2 className="stock-panel-heading">Stock-Stammdaten</h2>
-      <p className="stock-panel-hint muted">
-        Diese Angaben gelten dauerhaft für diesen Stock, bis du sie hier änderst.
-      </p>
+      <h2 className="stock-panel-heading">{t.colorPicker.heading}</h2>
+      <p className="stock-panel-hint muted">{t.colorPicker.hint}</p>
 
       <label className="hive-name-field">
-        <span className="color-picker-label">Name für Stock {hive}:</span>
+        <span className="color-picker-label">{t.colorPicker.nameLabel(hive)}</span>
         <input
           type="text"
           value={name}
-          placeholder={`Stock ${hive}`}
+          placeholder={t.common.hiveFallback(hive)}
           onChange={(e) => setName(e.target.value)}
           onBlur={commitName}
           onKeyDown={(e) => {
@@ -76,70 +76,73 @@ export default function ColorPicker({
       </label>
 
       <label className="hive-category-field">
-        <span className="color-picker-label">Kategorie für Stock {hive}:</span>
+        <span className="color-picker-label">{t.colorPicker.categoryLabel(hive)}</span>
         <select
           value={currentCategory || ""}
           onChange={(e) => onCategoryChange(e.target.value || null)}
         >
-          <option value="">–</option>
+          <option value="">{t.common.none}</option>
           {HIVE_CATEGORIES.map((c) => (
             <option key={c} value={c}>
-              {c}
+              {t.categories[c] ?? c}
             </option>
           ))}
         </select>
       </label>
 
       <label className="hive-strength-field">
-        <span className="color-picker-label">Volksstärke:</span>
+        <span className="color-picker-label">{t.colorPicker.strengthLabel}</span>
         <select
           value={currentColonyStrength || ""}
           onChange={(e) => onColonyStrengthChange(e.target.value || null)}
         >
-          <option value="">–</option>
-          <option value="schwach">schwach</option>
-          <option value="mittel">mittel</option>
-          <option value="stark">stark</option>
+          <option value="">{t.common.none}</option>
+          <option value="schwach">{t.strengthLabels.schwach}</option>
+          <option value="mittel">{t.strengthLabels.mittel}</option>
+          <option value="stark">{t.strengthLabels.stark}</option>
         </select>
       </label>
 
       <div className="hive-queen-field">
-        <span className="color-picker-label">Königin (Zuchtjahr):</span>
+        <span className="color-picker-label">{t.colorPicker.queenLabel}</span>
         <QueenColorField value={currentQueenYear ?? null} onChange={onQueenYearChange} />
       </div>
 
       <div className="status-badges">
         {varroaMitesActive && (
-          <div className="varroa-status-badge" title="Wird im Tageseintrag erfasst, verschwindet automatisch bei Varroamilben = Nein">
-            🔬 Varroamilben: Ja
+          <div className="varroa-status-badge" title={t.colorPicker.varroaBadgeTitle}>
+            {t.colorPicker.varroaBadge}
           </div>
         )}
         {latestWeightKg != null && (
-          <div className="weight-status-badge" title="Wird im Tageseintrag erfasst, bleibt bis zu einem neuen Wert stehen">
-            ⚖️ Stockgewicht: {latestWeightKg} kg
+          <div className="weight-status-badge" title={t.colorPicker.weightBadgeTitle}>
+            {t.colorPicker.weightBadge(latestWeightKg)}
           </div>
         )}
       </div>
 
       <div className="color-swatch-row">
-        <span className="color-picker-label">Stock {hive} markieren:</span>
+        <span className="color-picker-label">{t.colorPicker.markLabel(hive)}</span>
         <div className="color-swatches">
-          {COLOR_PALETTE.map((c) => (
-            <button
-              key={c.value}
-              type="button"
-              className={`swatch ${currentColor === c.value ? "selected" : ""}`}
-              style={{ background: c.value }}
-              title={c.name}
-              aria-label={c.name}
-              onClick={() => onPickColor(c.value)}
-            />
-          ))}
+          {COLOR_PALETTE.map((c) => {
+            const colorLabel = t.colorNames[c.name] ?? c.name;
+            return (
+              <button
+                key={c.value}
+                type="button"
+                className={`swatch ${currentColor === c.value ? "selected" : ""}`}
+                style={{ background: c.value }}
+                title={colorLabel}
+                aria-label={colorLabel}
+                onClick={() => onPickColor(c.value)}
+              />
+            );
+          })}
           <button
             type="button"
             className={`swatch clear ${!currentColor ? "selected" : ""}`}
-            title="Keine Markierung"
-            aria-label="Keine Markierung"
+            title={t.colorPicker.noMark}
+            aria-label={t.colorPicker.noMark}
             onClick={() => onPickColor(null)}
           >
             ✕
@@ -153,18 +156,18 @@ export default function ColorPicker({
           className="recent-changes-toggle"
           onClick={() => setShowRecentChanges((v) => !v)}
         >
-          Letzte Änderungen {showRecentChanges ? "▲" : "▼"}
+          {t.colorPicker.recentChanges} {showRecentChanges ? "▲" : "▼"}
         </button>
 
         {showRecentChanges && (
           <div className="recent-changes-panel">
             <div className="recent-changes-panel-header">
-              <span>Letzte Änderungen</span>
+              <span>{t.colorPicker.recentChanges}</span>
               <button
                 type="button"
                 className="recent-changes-close"
                 onClick={() => setShowRecentChanges(false)}
-                aria-label="Schließen"
+                aria-label={t.common.close}
               >
                 ✕
               </button>
@@ -176,7 +179,7 @@ export default function ColorPicker({
               hiveInfo={{} as Record<number, HiveInfo>}
               hideHiveBadge
               compact
-              emptyMessage="Noch keine Änderungen."
+              emptyMessage={t.colorPicker.noChanges}
             />
           </div>
         )}

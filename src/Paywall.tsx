@@ -1,6 +1,15 @@
 import { useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import { CurrentUser } from "./userSession";
-import { EULA_URL, PRIVACY_URL, openLegalLink, purchaseSubscription, restorePurchases } from "./subscription";
+import { useT, useLang, LanguageSwitch } from "./i18n";
+import {
+  EULA_URL,
+  PRIVACY_URL,
+  openLegalLink,
+  purchaseSubscription,
+  restorePurchases,
+  startWebCheckout,
+} from "./subscription";
 
 interface Props {
   user: CurrentUser;
@@ -9,16 +18,25 @@ interface Props {
 }
 
 export default function Paywall({ user, onUnlocked, onSwitchUser }: Props) {
+  const t = useT();
+  const { lang } = useLang();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const isNative = Capacitor.isNativePlatform();
 
   async function handleSubscribe() {
     setBusy(true);
     setMessage("");
-    const result = await purchaseSubscription(user);
+    // Native: RevenueCat/StoreKit-Kauf direkt in der App. Web: Weiterleitung zu
+    // Stripes Checkout (siehe Anti-Steering-Hinweis in subscription.ts) - dort löst
+    // sich die Seite komplett auf window.location.href = ..., "busy" bleibt also
+    // einfach stehen, bis die Navigation greift.
+    const result = isNative
+      ? await purchaseSubscription(user, t.subscriptionMsg)
+      : await startWebCheckout(user, t.subscriptionMsg);
     setBusy(false);
     if (result.success) {
-      onUnlocked();
+      if (isNative) onUnlocked();
     } else if (result.message) {
       setMessage(result.message);
     }
@@ -27,7 +45,7 @@ export default function Paywall({ user, onUnlocked, onSwitchUser }: Props) {
   async function handleRestore() {
     setBusy(true);
     setMessage("");
-    const result = await restorePurchases(user);
+    const result = await restorePurchases(user, t.subscriptionMsg);
     setBusy(false);
     if (result.success) {
       onUnlocked();
@@ -38,42 +56,42 @@ export default function Paywall({ user, onUnlocked, onSwitchUser }: Props) {
 
   return (
     <div className="app">
+      <LanguageSwitch />
       <header>
-        <h1>🐝 isybee</h1>
-        <p className="subtitle">Deine kostenlose Testphase ist abgelaufen</p>
+        <h1>{t.app.title}</h1>
+        <p className="subtitle">{t.paywall.subtitle}</p>
       </header>
       <div className="paywall">
-        <p>
-          Um isybee als <strong>{user.name}</strong> weiter zu nutzen, brauchst du das
-          isybee-Monatsabo.
-        </p>
+        <p>{t.paywall.intro(user.name)}</p>
         <ul className="paywall-benefits">
-          <li>Unbegrenzt Tagebucheinträge und Fotos für alle deine Bienenstöcke</li>
-          <li>Offline-Nutzung mit automatischer Synchronisierung</li>
-          <li>Jahresauswertung und Erntestatistik</li>
+          <li>{t.paywall.benefit1}</li>
+          <li>{t.paywall.benefit2}</li>
+          <li>{t.paywall.benefit3}</li>
         </ul>
-        <p className="paywall-price">0,99&nbsp;€ / Monat, automatische Verlängerung</p>
-        <p className="paywall-terms">isybee Monatsabo &middot; Laufzeit: 1 Monat &middot; jederzeit kündbar</p>
+        <p className="paywall-price">{t.paywall.price}</p>
+        <p className="paywall-terms">{t.paywall.terms}</p>
         <div className="paywall-legal">
           <button type="button" className="link" onClick={() => openLegalLink(EULA_URL)}>
-            Nutzungsbedingungen
+            {t.app.eula}
           </button>
           <span className="paywall-legal-sep" aria-hidden="true">
             ·
           </span>
-          <button type="button" className="link" onClick={() => openLegalLink(PRIVACY_URL)}>
-            Datenschutzerklärung
+          <button type="button" className="link" onClick={() => openLegalLink(PRIVACY_URL(lang))}>
+            {t.app.privacy}
           </button>
         </div>
         <button className="primary" onClick={handleSubscribe} disabled={busy}>
-          {busy ? "Einen Moment …" : "Jetzt abonnieren"}
+          {busy ? t.common.moment : isNative ? t.paywall.subscribeNative : t.paywall.subscribeWeb}
         </button>
-        <button className="link" onClick={handleRestore} disabled={busy}>
-          Käufe wiederherstellen
-        </button>
+        {isNative && (
+          <button className="link" onClick={handleRestore} disabled={busy}>
+            {t.paywall.restore}
+          </button>
+        )}
         {message && <p className="error">{message}</p>}
         <button className="link" onClick={onSwitchUser}>
-          Anderes Konto verwenden
+          {t.paywall.switchAccount}
         </button>
       </div>
     </div>

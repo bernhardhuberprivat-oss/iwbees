@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiUrl } from "./apiBase";
 import { readableTextColor, hiveRingColor } from "./colorUtils";
 import { HiveInfo } from "./types";
+import { useT } from "./i18n";
 
 interface Props {
   userId: number;
@@ -25,6 +26,7 @@ function hiveBadgeStyle(color?: string | null) {
 // für ein wählbares Jahr die Aufteilung nach Stock sowie separat die als "Gesamt"
 // (ohne Stock-Zuordnung) erfassten Mengen.
 export default function HarvestSummary({ userId, hiveInfo, onClose }: Props) {
+  const t = useT();
   const [year, setYear] = useState(new Date().getFullYear());
   const [data, setData] = useState<SummaryData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,10 +46,11 @@ export default function HarvestSummary({ userId, hiveInfo, onClose }: Props) {
         years: json.years || [],
       });
     } catch {
-      setError("Auswertung konnte nicht geladen werden.");
+      setError(t.harvestSummary.loadError);
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   useEffect(() => {
@@ -70,11 +73,11 @@ export default function HarvestSummary({ userId, hiveInfo, onClose }: Props) {
   return (
     <div className="harvest-overlay" onClick={onClose}>
       <div className="harvest-panel" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="harvest-panel-close" onClick={onClose} aria-label="Schließen">
+        <button type="button" className="harvest-panel-close" onClick={onClose} aria-label={t.common.close}>
           ✕
         </button>
 
-        <h2 className="harvest-panel-heading">🍯 Auswertung</h2>
+        <h2 className="harvest-panel-heading">{t.harvestSummary.heading}</h2>
 
         {yearOptions.length > 1 && (
           <div className="date-toggle harvest-mode-toggle">
@@ -87,18 +90,18 @@ export default function HarvestSummary({ userId, hiveInfo, onClose }: Props) {
         )}
 
         {loading ? (
-          <p className="muted">Lade…</p>
+          <p className="muted">{t.harvestSummary.loading}</p>
         ) : error ? (
           <p className="error">{error}</p>
         ) : !data || (data.perHive.length === 0 && data.gesamtOnlyKg === 0) ? (
-          <p className="muted">Für {year} sind noch keine Erträge erfasst.</p>
+          <p className="muted">{t.harvestSummary.empty(year)}</p>
         ) : (
           <div className="harvest-summary">
             {data.perHive.length > 0 && (
               <div className="harvest-summary-list">
                 {data.perHive.map(({ hive, kg }) => {
                   const info = hiveInfo[hive];
-                  const label = info?.name?.trim() || `Stock ${hive}`;
+                  const label = info?.name?.trim() || t.common.hiveFallback(hive);
                   return (
                     <div className="harvest-summary-row" key={hive}>
                       <span className="hive-badge harvest-summary-label" style={hiveBadgeStyle(info?.color)}>
@@ -113,14 +116,12 @@ export default function HarvestSummary({ userId, hiveInfo, onClose }: Props) {
 
             {data.gesamtOnlyKg > 0 && (
               <div className="harvest-summary-row">
-                <span className="hive-badge harvest-summary-label">Gesamt (ohne Stock)</span>
+                <span className="hive-badge harvest-summary-label">{t.harvestSummary.totalNoHive}</span>
                 <span className="harvest-summary-kg">{data.gesamtOnlyKg.toFixed(1)} kg</span>
               </div>
             )}
 
-            <div className="harvest-summary-total">
-              Summe {year}: {data.yearTotal.toFixed(1)} kg
-            </div>
+            <div className="harvest-summary-total">{t.harvestSummary.yearTotal(year, data.yearTotal.toFixed(1))}</div>
           </div>
         )}
       </div>

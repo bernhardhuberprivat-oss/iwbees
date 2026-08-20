@@ -1,6 +1,6 @@
 {
-  "name": "Bienentagebuch",
-  "short_name": "Bienentagebuch",
+  "name": "isybee",
+  "short_name": "isybee",
   "description": "Tagebuch für deine Bienenstöcke",
   "start_url": "/",
   "display": "standalone",

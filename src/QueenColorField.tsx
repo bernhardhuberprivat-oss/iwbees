@@ -1,4 +1,5 @@
 import { getQueenColorForYear } from "./types";
+import { useT } from "./i18n";
 
 interface Props {
   value: number | null;
@@ -6,18 +7,20 @@ interface Props {
 }
 
 export default function QueenColorField({ value, onChange }: Props) {
+  const t = useT();
   const color = getQueenColorForYear(value);
   const swatchFill = color ? color.hex : "#eee6d3";
   const swatchBorder = color ? "#2a1c0d" : "#c9bb9a";
+  const colorLabel = color ? t.colorNames[color.name] ?? color.name : null;
 
   return (
     <div className="queen-year-field">
-      <span className="queen-year-caption">Jahr eingeben</span>
+      <span className="queen-year-caption">{t.queenColorField.yearLabel}</span>
 
       <input
         type="number"
         inputMode="numeric"
-        placeholder="z.B. 2026"
+        placeholder={t.queenColorField.placeholder}
         min={2000}
         max={2100}
         value={value ?? ""}
@@ -70,9 +73,9 @@ export default function QueenColorField({ value, onChange }: Props) {
       <span
         className="queen-color-swatch"
         style={{ background: swatchFill, borderColor: swatchBorder }}
-        title={color ? `Markierungsfarbe: ${color.name}` : "Noch kein Zuchtjahr eingegeben"}
+        title={colorLabel ? t.queenColorField.titleWithColor(colorLabel) : t.queenColorField.titleNoColor}
       />
-      <span className="queen-color-label">{color ? color.name : "–"}</span>
+      <span className="queen-color-label">{colorLabel || t.common.none}</span>
     </div>
   );
 }

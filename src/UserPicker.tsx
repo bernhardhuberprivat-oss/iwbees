@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import { CurrentUser, storeUser } from "./userSession";
 import { apiUrl } from "./apiBase";
+import { useT } from "./i18n";
 
 interface Props {
   onLogin: (user: CurrentUser) => void;
@@ -9,6 +10,7 @@ interface Props {
 type Mode = "login" | "create";
 
 export default function UserPicker({ onLogin }: Props) {
+  const t = useT();
   const [mode, setMode] = useState<Mode>("login");
   const [name, setName] = useState("");
   const [pin, setPin] = useState("");
@@ -30,7 +32,7 @@ export default function UserPicker({ onLogin }: Props) {
     e.preventDefault();
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setError("Bitte deinen Namen eingeben.");
+      setError(t.userPicker.errNameRequired);
       return;
     }
     setSubmitting(true);
@@ -43,14 +45,14 @@ export default function UserPicker({ onLogin }: Props) {
         body: JSON.stringify({ name: trimmedName, pin }),
       });
       if (!res.ok) {
-        setError("Name oder PIN falsch");
+        setError(t.userPicker.errLoginFailed);
         return;
       }
       const user = await res.json();
       storeUser(user);
       onLogin(user);
     } catch {
-      setError("Keine Verbindung – Anmeldung braucht einmalig Internet.");
+      setError(t.userPicker.errNoConnectionLogin);
     } finally {
       setSubmitting(false);
     }
@@ -59,18 +61,14 @@ export default function UserPicker({ onLogin }: Props) {
   async function handleDeleteUser() {
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setError("Bitte zuerst deinen Namen eingeben.");
+      setError(t.userPicker.errNameRequiredDelete);
       return;
     }
     if (pin.length !== 4) {
-      setError("Bitte zuerst den 4-stelligen PIN eingeben.");
+      setError(t.userPicker.errPinRequiredDelete);
       return;
     }
-    if (
-      !confirm(
-        `Nutzer "${trimmedName}" wirklich löschen? Alle Stöcke, Einträge und Fotos dieses Nutzers werden dabei unwiderruflich gelöscht.`
-      )
-    ) {
+    if (!confirm(t.userPicker.confirmDelete(trimmedName))) {
       return;
     }
 
@@ -84,14 +82,14 @@ export default function UserPicker({ onLogin }: Props) {
         body: JSON.stringify({ name: trimmedName, pin }),
       });
       if (!res.ok) {
-        setError("Name oder PIN falsch");
+        setError(t.userPicker.errLoginFailed);
         return;
       }
       setName("");
       setPin("");
-      setInfo("Nutzer wurde gelöscht.");
+      setInfo(t.userPicker.infoDeleted);
     } catch {
-      setError("Keine Verbindung – zum Löschen brauchst du einmal Internet.");
+      setError(t.userPicker.errNoConnectionDelete);
     } finally {
       setDeleting(false);
     }
@@ -104,15 +102,15 @@ export default function UserPicker({ onLogin }: Props) {
 
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setError("Bitte einen Namen eingeben.");
+      setError(t.userPicker.errNameRequiredCreate);
       return;
     }
     if (!/^\d{4}$/.test(pin)) {
-      setError("Der PIN muss aus genau 4 Ziffern bestehen.");
+      setError(t.userPicker.errPinFormat);
       return;
     }
     if (pin !== pin2) {
-      setError("Die beiden PINs stimmen nicht überein.");
+      setError(t.userPicker.errPinMismatch);
       return;
     }
 
@@ -124,14 +122,14 @@ export default function UserPicker({ onLogin }: Props) {
         body: JSON.stringify({ name: trimmedName, pin }),
       });
       if (!res.ok) {
-        setError(res.status === 409 ? "Dieser Name ist schon vergeben." : await res.text());
+        setError(res.status === 409 ? t.userPicker.errNameTaken : await res.text());
         return;
       }
       const user = await res.json();
       storeUser(user);
       onLogin(user);
     } catch {
-      setError("Keine Verbindung – zum Anlegen eines neuen Nutzers brauchst du einmal Internet.");
+      setError(t.userPicker.errNoConnectionCreate);
     } finally {
       setSubmitting(false);
     }
@@ -139,23 +137,23 @@ export default function UserPicker({ onLogin }: Props) {
 
   return (
     <div className="user-picker">
-      <h2>Wer bist du?</h2>
+      <h2>{t.userPicker.heading}</h2>
 
       {mode === "login" && (
         <form className="user-form" onSubmit={handleLogin}>
           <label>
-            Name
+            {t.userPicker.nameLabel}
             <input
               type="text"
               autoFocus
               autoCapitalize="words"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="z.B. Bernhard"
+              placeholder={t.userPicker.namePlaceholder}
             />
           </label>
           <label>
-            4-stelliger PIN
+            {t.userPicker.pinLabel}
             <input
               type="password"
               inputMode="numeric"
@@ -169,10 +167,10 @@ export default function UserPicker({ onLogin }: Props) {
           {info && <p className="info">{info}</p>}
           <div className="user-form-actions">
             <button type="button" className="secondary" onClick={() => switchMode("create")}>
-              Neuer Nutzer
+              {t.userPicker.newUser}
             </button>
             <button type="submit" disabled={submitting || deleting || pin.length !== 4}>
-              {submitting ? "Prüfe…" : "Anmelden"}
+              {submitting ? t.userPicker.checking : t.userPicker.login}
             </button>
           </div>
           <button
@@ -181,7 +179,7 @@ export default function UserPicker({ onLogin }: Props) {
             onClick={handleDeleteUser}
             disabled={submitting || deleting}
           >
-            {deleting ? "Lösche…" : "Diesen Nutzer löschen"}
+            {deleting ? t.userPicker.deleting : t.userPicker.deleteUser}
           </button>
         </form>
       )}
@@ -189,17 +187,17 @@ export default function UserPicker({ onLogin }: Props) {
       {mode === "create" && (
         <form className="user-form" onSubmit={handleCreate}>
           <label>
-            Name
+            {t.userPicker.nameLabel}
             <input
               type="text"
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="z.B. Bernhard"
+              placeholder={t.userPicker.namePlaceholder}
             />
           </label>
           <label>
-            4-stelliger PIN
+            {t.userPicker.pinLabel}
             <input
               type="password"
               inputMode="numeric"
@@ -209,7 +207,7 @@ export default function UserPicker({ onLogin }: Props) {
             />
           </label>
           <label>
-            PIN wiederholen
+            {t.userPicker.pinRepeatLabel}
             <input
               type="password"
               inputMode="numeric"
@@ -221,10 +219,10 @@ export default function UserPicker({ onLogin }: Props) {
           {error && <p className="error">{error}</p>}
           <div className="user-form-actions">
             <button type="button" className="secondary" onClick={() => switchMode("login")}>
-              Zurück
+              {t.userPicker.back}
             </button>
             <button type="submit" disabled={submitting}>
-              {submitting ? "Lege an…" : "Nutzer anlegen"}
+              {submitting ? t.userPicker.creating : t.userPicker.create}
             </button>
           </div>
         </form>

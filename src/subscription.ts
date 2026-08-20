@@ -1,17 +1,43 @@
-// Abo-/Testphasen-Logik für die native iOS-App. Die Web-Version (iwbees.netlify.app)
-// bleibt für die Familie komplett kostenlos - all das hier greift ausschließlich,
-// wenn die App als native Capacitor-App läuft (Capacitor.isNativePlatform()).
+// Abo-/Testphasen-Logik für isybee. Native iOS-App: RevenueCat/StoreKit. Web-Build
+// (iwbees.netlify.app, PWA/Android): Stripe-Checkout, siehe startWebCheckout() unten.
+// Beide Plattformen teilen sich dieselbe 30-Tage-Testphase-Regel und denselben
+// Admin-/Geschenkt-Bypass, aber jeweils einen eigenen Zeit-Anker (createdAt für nativ,
+// webTrialStart für Web) und eine eigene Zahlungsquelle - siehe die "ONE
+// project/repo/backend/DB"-Architekturentscheidung im hopfrain/isybee-Skill: beide
+// Wege dürfen sich nie gegenseitig beeinflussen können.
 import { Capacitor } from "@capacitor/core";
 import { CurrentUser } from "./userSession";
+import { apiUrl } from "./apiBase";
+import { Lang } from "./i18n";
+
+// Typ der übersetzten Meldungen (siehe i18n.tsx -> subscriptionMsg) - wird von den
+// Funktionen unten als Parameter erwartet, weil dieses Modul außerhalb von React-
+// Komponenten liegt und daher useT() nicht selbst aufrufen kann.
+type SubscriptionMsg = {
+  notAvailable: string;
+  noOffer: string;
+  purchasedNotActiveYet: string;
+  purchaseFailed: string;
+  restoreNotAvailable: string;
+  noActivePurchases: string;
+  restoreFailed: string;
+  billingPortalNotAvailable: string;
+};
 
 const TRIAL_DAYS = 30;
 const ENTITLEMENT_ID = "premium";
 
 // Von Apple für Auto-renewable-Subscriptions verlangte Links (Guideline 3.1.2), die
 // direkt im Kaufbildschirm (Paywall.tsx) angezeigt werden müssen - nicht nur in den
-// App-Store-Metadaten. EULA ist Apples Standard-EULA (kein eigener Text nötig).
+// App-Store-Metadaten. EULA ist Apples Standard-EULA (kein eigener Text nötig, wird von
+// Apple selbst je nach Systemsprache dargestellt).
 export const EULA_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
-export const PRIVACY_URL = "https://iwbees.netlify.app/datenschutz.html";
+
+// Zwei separate statische Seiten (public/datenschutz.html bzw. public/privacy.html),
+// passend zur aktuell gewählten App-Oberflächensprache - siehe i18n.tsx.
+export function PRIVACY_URL(lang: Lang): string {
+  return lang === "de" ? "https://iwbees.netlify.app/datenschutz.html" : "https://iwbees.netlify.app/privacy.html";
+}
 
 // Öffnet einen externen Link (EULA/Datenschutz) verlässlich im System-Browser statt in
 // der eingebetteten WKWebView der App - nativ über das Capacitor-Browser-Plugin, im
@@ -57,17 +83,27 @@ export function isAdminUser(user: CurrentUser): boolean {
   return getAdminUserNames().includes(user.name.trim().toLowerCase());
 }
 
+// Native App: createdAt (Kontoerstellung). Web: webTrialStart (siehe userSession.ts) -
+// für Bestandskonten von vor der Web-Abo-Einführung ist das NICHT dasselbe Datum wie
+// createdAt, sondern der Zeitpunkt ihres ersten Logins nach dem Rollout (wird
+// server-seitig in netlify/functions/users-login.mts nachgetragen).
+function trialAnchor(user: CurrentUser): string | undefined {
+  return Capacitor.isNativePlatform() ? user.createdAt : user.webTrialStart;
+}
+
 export function isTrialActive(user: CurrentUser): boolean {
-  if (!user.createdAt) return true; // Sicherheitsnetz: ohne Datum lieber nicht aussperren
-  const createdAt = new Date(user.createdAt).getTime();
-  const ageMs = Date.now() - createdAt;
+  const anchor = trialAnchor(user);
+  if (!anchor) return true; // Sicherheitsnetz: ohne Datum lieber nicht aussperren
+  const anchorMs = new Date(anchor).getTime();
+  const ageMs = Date.now() - anchorMs;
   return ageMs < TRIAL_DAYS * 24 * 60 * 60 * 1000;
 }
 
 export function trialDaysLeft(user: CurrentUser): number {
-  if (!user.createdAt) return TRIAL_DAYS;
-  const createdAt = new Date(user.createdAt).getTime();
-  const ageDays = (Date.now() - createdAt) / (24 * 60 * 60 * 1000);
+  const anchor = trialAnchor(user);
+  if (!anchor) return TRIAL_DAYS;
+  const anchorMs = new Date(anchor).getTime();
+  const ageDays = (Date.now() - anchorMs) / (24 * 60 * 60 * 1000);
   return Math.max(0, Math.ceil(TRIAL_DAYS - ageDays));
 }
 
@@ -77,11 +113,19 @@ export function trialDaysLeft(user: CurrentUser): number {
 // App NICHT gesperrt - eine fehlerhafte Zahlungsprüfung soll nie zum Absturz oder
 // zur ungerechtfertigten Aussperrung führen.
 export async function checkSubscription(user: CurrentUser): Promise<boolean> {
-  if (!Capacitor.isNativePlatform()) return true;
   if (isAdminUser(user)) return true;
   // Von einem Admin geschenktes Abo (siehe AdminPanel.tsx / netlify/functions/admin.mts) -
-  // kommt direkt vom Server beim Login, braucht keinen RevenueCat-Aufruf.
+  // kommt direkt vom Server beim Login, braucht keinen RevenueCat-/Stripe-Aufruf.
   if (user.isGifted) return true;
+
+  if (!Capacitor.isNativePlatform()) {
+    // Web-Build: kein RevenueCat, der Server hat webSubscriptionActive schon beim
+    // Login berechnet (netlify/functions/users-login.mts, isStripeStatusActive()).
+    // Direkt nach einer Stripe-Checkout-Rückkehr kann das kurz hinter dem tatsächlichen
+    // Stand liegen, bis der Webhook durchgelaufen ist - siehe refreshWebSubscriptionStatus()
+    // in App.tsx, das genau diesen Fall abfängt.
+    return Boolean(user.webSubscriptionActive);
+  }
 
   const apiKey = import.meta.env.VITE_REVENUECAT_API_KEY as string | undefined;
   if (!apiKey) return true;
@@ -98,12 +142,15 @@ export async function checkSubscription(user: CurrentUser): Promise<boolean> {
 }
 
 // Startet den Kaufvorgang für das Monatsabo. Wird vom Paywall-Screen aufgerufen.
-export async function purchaseSubscription(user: CurrentUser): Promise<{ success: boolean; message?: string }> {
+export async function purchaseSubscription(
+  user: CurrentUser,
+  msg: SubscriptionMsg
+): Promise<{ success: boolean; message?: string }> {
   if (!Capacitor.isNativePlatform()) return { success: true };
 
   const apiKey = import.meta.env.VITE_REVENUECAT_API_KEY as string | undefined;
   if (!apiKey) {
-    return { success: false, message: "Abo derzeit nicht verfügbar. Bitte später erneut versuchen." };
+    return { success: false, message: msg.notAvailable };
   }
 
   try {
@@ -112,27 +159,28 @@ export async function purchaseSubscription(user: CurrentUser): Promise<{ success
     const offerings = await Purchases.getOfferings();
     const pkg = offerings.current?.availablePackages?.[0];
     if (!pkg) {
-      return { success: false, message: "Kein Abo-Angebot gefunden. Bitte später erneut versuchen." };
+      return { success: false, message: msg.noOffer };
     }
     const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
     const active = Boolean(customerInfo.entitlements.active[ENTITLEMENT_ID]);
-    return active
-      ? { success: true }
-      : { success: false, message: "Kauf abgeschlossen, aber Abo noch nicht aktiv. Bitte kurz warten." };
+    return active ? { success: true } : { success: false, message: msg.purchasedNotActiveYet };
   } catch (err: any) {
     if (err?.userCancelled) return { success: false };
     console.warn("Kauf fehlgeschlagen:", err);
-    return { success: false, message: "Kauf fehlgeschlagen. Bitte später erneut versuchen." };
+    return { success: false, message: msg.purchaseFailed };
   }
 }
 
 // Stellt frühere Käufe wieder her (z. B. nach App-Neuinstallation oder Gerätewechsel).
-export async function restorePurchases(user: CurrentUser): Promise<{ success: boolean; message?: string }> {
+export async function restorePurchases(
+  user: CurrentUser,
+  msg: SubscriptionMsg
+): Promise<{ success: boolean; message?: string }> {
   if (!Capacitor.isNativePlatform()) return { success: true };
 
   const apiKey = import.meta.env.VITE_REVENUECAT_API_KEY as string | undefined;
   if (!apiKey) {
-    return { success: false, message: "Wiederherstellung derzeit nicht verfügbar." };
+    return { success: false, message: msg.restoreNotAvailable };
   }
 
   try {
@@ -140,11 +188,91 @@ export async function restorePurchases(user: CurrentUser): Promise<{ success: bo
     await Purchases.configure({ apiKey, appUserID: String(user.id) });
     const { customerInfo } = await Purchases.restorePurchases();
     const active = Boolean(customerInfo.entitlements.active[ENTITLEMENT_ID]);
-    return active
-      ? { success: true }
-      : { success: false, message: "Keine aktiven Käufe für dieses Konto gefunden." };
+    return active ? { success: true } : { success: false, message: msg.noActivePurchases };
   } catch (err) {
     console.warn("Wiederherstellung fehlgeschlagen:", err);
-    return { success: false, message: "Wiederherstellung fehlgeschlagen. Bitte später erneut versuchen." };
+    return { success: false, message: msg.restoreFailed };
+  }
+}
+
+// --- Web-Abo (Stripe) -------------------------------------------------------------
+// Nur für den Web-Build gedacht (Paywall.tsx blendet diesen Weg auf
+// Capacitor.isNativePlatform() aus) - siehe Apples Anti-Steering-Regel, Guideline
+// 3.1.1: die native App darf niemals auf einen externen Zahlungsweg verweisen.
+
+// Startet den Stripe-Checkout: fragt eine Checkout-URL vom Server ab und leitet den
+// Browser dorthin weiter (volle Seitennavigation, kein Popup - robuster gegen
+// Popup-Blocker und funktioniert identisch auf Mobile/Desktop).
+export async function startWebCheckout(
+  user: CurrentUser,
+  msg: SubscriptionMsg
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    const res = await fetch(apiUrl("/api/stripe-checkout"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user.id }),
+    });
+    if (!res.ok) {
+      return { success: false, message: msg.notAvailable };
+    }
+    const { url } = await res.json();
+    if (!url) {
+      return { success: false, message: msg.notAvailable };
+    }
+    window.location.href = url;
+    return { success: true };
+  } catch (err) {
+    console.warn("Stripe-Checkout konnte nicht gestartet werden:", err);
+    return { success: false, message: msg.notAvailable };
+  }
+}
+
+// Öffnet Stripes Customer Portal, damit Web-Abonnent:innen ihr Abo selbst verwalten
+// oder kündigen können (nur sinnvoll, wenn schon einmal abonniert wurde).
+export async function openWebBillingPortal(
+  user: CurrentUser,
+  msg: SubscriptionMsg
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    const res = await fetch(apiUrl("/api/stripe-portal"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user.id }),
+    });
+    if (!res.ok) {
+      return { success: false, message: msg.billingPortalNotAvailable };
+    }
+    const { url } = await res.json();
+    if (!url) {
+      return { success: false, message: msg.billingPortalNotAvailable };
+    }
+    window.location.href = url;
+    return { success: true };
+  } catch (err) {
+    console.warn("Stripe-Portal konnte nicht geöffnet werden:", err);
+    return { success: false, message: msg.billingPortalNotAvailable };
+  }
+}
+
+// Fragt den aktuellen Trial-/Abo-Status frisch vom Server ab (netlify/functions/
+// subscription-status.mts) - ohne erneute PIN-Eingabe. Wird von App.tsx u. a. direkt
+// nach der Rückkehr von Stripes Checkout aufgerufen, weil der Webhook, der
+// webSubscriptionActive tatsächlich umschaltet, asynchron und mit ein paar Sekunden
+// Verzögerung nach dem Checkout-Redirect eintrifft.
+export async function refreshWebSubscriptionStatus(user: CurrentUser): Promise<CurrentUser> {
+  try {
+    const res = await fetch(apiUrl(`/api/subscription-status?userId=${user.id}`));
+    if (!res.ok) return user;
+    const data = await res.json();
+    return {
+      ...user,
+      webTrialStart: data.webTrialStart ?? user.webTrialStart,
+      webSubscriptionActive: Boolean(data.webSubscriptionActive),
+      isGifted: typeof data.isGifted === "boolean" ? data.isGifted : user.isGifted,
+    };
+  } catch (err) {
+    console.warn("Abo-Status konnte nicht aktualisiert werden:", err);
+    return user;
   }
 }

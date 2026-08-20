@@ -10,6 +10,13 @@ export interface CurrentUser {
   createdAt?: string;
   // true, wenn ein Admin diesem Konto das Abo geschenkt hat (siehe subscription.ts).
   isGifted?: boolean;
+  // ISO-Zeitstempel, ab dem die 30-Tage-Testphase im WEB-Build zählt - eigener Anker,
+  // getrennt von createdAt, damit bestehende Web-Konten erst ab der Einführung des
+  // Web-Abos (nicht ab ihrer ursprünglichen Kontoerstellung) angerechnet bekommen.
+  webTrialStart?: string;
+  // true, wenn für dieses Konto ein aktives Stripe-Abo (oder ein geschenktes Abo)
+  // vorliegt - wird vom Server berechnet (netlify/functions/_subscriptionSchema.mts).
+  webSubscriptionActive?: boolean;
 }
 
 const KEY = "bienentagebuch:currentUser";

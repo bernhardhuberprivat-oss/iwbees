@@ -3,6 +3,7 @@ import { withCors } from "./_cors.mts";
 import { getDatabase } from "@netlify/database";
 import { getStore } from "@netlify/blobs";
 import { createHash } from "node:crypto";
+import { ensureSubscriptionColumns, isStripeStatusActive } from "./_subscriptionSchema.mts";
 
 function hashPin(pin: string) {
   return createHash("sha256").update(pin).digest("hex");
@@ -14,6 +15,7 @@ function getPhotoStore() {
 
 const handler = async (req: Request, context: Context) => {
   const db = getDatabase();
+  await ensureSubscriptionColumns(db);
 
   if (req.method === "GET") {
     // Aus Datenschutzgründen sieht niemand mehr die Namen anderer Nutzer:innen - nur
@@ -39,9 +41,12 @@ const handler = async (req: Request, context: Context) => {
       return new Response("Dieser Nutzername ist bereits vergeben", { status: 409 });
     }
 
+    // web_trial_start startet für ein brandneues Konto im selben Moment wie created_at -
+    // die 30-Tage-Testphase im Web-Build (siehe src/subscription.ts) zählt also normal
+    // ab Registrierung, genau wie createdAt es für die native App schon immer tat.
     const [user] = await db.sql`
-      INSERT INTO users (name, pin_hash) VALUES (${name}, ${hashPin(pin)})
-      RETURNING id, name, hive_count, created_at, is_gifted
+      INSERT INTO users (name, pin_hash, web_trial_start) VALUES (${name}, ${hashPin(pin)}, NOW())
+      RETURNING id, name, hive_count, created_at, is_gifted, web_trial_start, stripe_subscription_status
     `;
 
     return Response.json(
@@ -51,6 +56,8 @@ const handler = async (req: Request, context: Context) => {
         hiveCount: user.hive_count,
         createdAt: user.created_at,
         isGifted: user.is_gifted,
+        webTrialStart: user.web_trial_start,
+        webSubscriptionActive: isStripeStatusActive(user.stripe_subscription_status) || Boolean(user.is_gifted),
       },
       { status: 201 }
     );

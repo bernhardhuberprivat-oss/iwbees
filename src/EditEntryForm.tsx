@@ -5,6 +5,7 @@ import { updatePendingEntryFields } from "./offline";
 import { compressImages } from "./imageCompression";
 import { Entry, getQueenColorForYear } from "./types";
 import { apiUrl } from "./apiBase";
+import { useT, useLang, dateLocale } from "./i18n";
 
 interface Props {
   entry: Entry;
@@ -13,17 +14,19 @@ interface Props {
   onCancel: () => void;
 }
 
-function formatDisplay(dateStr: string) {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
 export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Props) {
+  const t = useT();
+  const { lang } = useLang();
   const isPending = !!entry.pending;
+
+  function formatDisplay(dateStr: string) {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(dateLocale(lang), {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  }
 
   const [entryDate, setEntryDate] = useState(entry.entry_date.slice(0, 10));
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -112,7 +115,7 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
       }
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Fehler beim Speichern");
+      setError(err instanceof Error ? err.message : t.common.genericSaveError);
     } finally {
       setSubmitting(false);
     }
@@ -120,10 +123,10 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
 
   return (
     <form className="entry-form edit-entry-form" onSubmit={handleSubmit}>
-      <h2 className="entry-form-heading">Eintrag bearbeiten</h2>
+      <h2 className="entry-form-heading">{t.entryForm.editHeading}</h2>
 
       <div className="full-width">
-        <span className="field-label">Datum</span>
+        <span className="field-label">{t.entryForm.date}</span>
         <div className="date-toggle">
           <button type="button" className="active" onClick={() => setShowDatePicker((v) => !v)}>
             📅 {formatDisplay(entryDate)}
@@ -142,58 +145,58 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
 
       <div className="form-row">
         <label>
-          Königin – Zuchtjahr
+          {t.entryForm.queenYear}
           <QueenColorField value={queenYear} onChange={setQueenYear} />
         </label>
 
         <label>
-          Volksstärke
+          {t.entryForm.colonyStrength}
           <select value={colonyStrength} onChange={(e) => setColonyStrength(e.target.value)}>
-            <option value="">–</option>
-            <option value="schwach">schwach</option>
-            <option value="mittel">mittel</option>
-            <option value="stark">stark</option>
+            <option value="">{t.common.none}</option>
+            <option value="schwach">{t.strengthLabels.schwach}</option>
+            <option value="mittel">{t.strengthLabels.mittel}</option>
+            <option value="stark">{t.strengthLabels.stark}</option>
           </select>
         </label>
       </div>
 
       <div className="sightings-section">
-        <span className="color-picker-label">Sichtungen:</span>
+        <span className="color-picker-label">{t.entryForm.sightings}</span>
 
         <div className="sightings-checks">
           <label className="sighting-check">
             <input type="checkbox" checked={sightingQueen} onChange={(e) => setSightingQueen(e.target.checked)} />
-            Königin
+            {t.entryForm.sightingQueen}
           </label>
           <label className="sighting-check">
             <input type="checkbox" checked={sightingLarvae} onChange={(e) => setSightingLarvae(e.target.checked)} />
-            Larven
+            {t.entryForm.sightingLarvae}
           </label>
           <label className="sighting-check">
             <input type="checkbox" checked={sightingEggs} onChange={(e) => setSightingEggs(e.target.checked)} />
-            Stifte
+            {t.entryForm.sightingEggs}
           </label>
           <label className="sighting-check">
             <input type="checkbox" checked={sightingBrood} onChange={(e) => setSightingBrood(e.target.checked)} />
-            Brut
+            {t.entryForm.sightingBrood}
           </label>
         </div>
 
         <div className="sightings-numbers">
           <label className="sighting-number">
-            Besetzte Waben
+            {t.entryForm.occupiedCombs}
             <input type="number" min={0} value={occupiedCombs} onChange={(e) => setOccupiedCombs(e.target.value)} />
           </label>
           <label className="sighting-number">
-            Weiselzellen
+            {t.entryForm.queenCells}
             <input type="number" min={0} value={queenCells} onChange={(e) => setQueenCells(e.target.value)} />
           </label>
           <label className="sighting-number">
-            Varroamilben
+            {t.entryForm.varroaMites}
             <select value={varroaMites} onChange={(e) => setVarroaMites(e.target.value as "" | "ja" | "nein")}>
-              <option value="">–</option>
-              <option value="ja">Ja</option>
-              <option value="nein">Nein</option>
+              <option value="">{t.common.none}</option>
+              <option value="ja">{t.common.yes}</option>
+              <option value="nein">{t.common.no}</option>
             </select>
           </label>
         </div>
@@ -202,18 +205,18 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
       <div className="form-row">
         {varroaMites === "ja" && (
           <label>
-            Varroabefallbehandlung
+            {t.entryForm.varroaTreatment}
             <input type="text" value={varroa} onChange={(e) => setVarroa(e.target.value)} />
           </label>
         )}
 
         <label>
-          Fütterung
+          {t.entryForm.feeding}
           <input type="text" value={feeding} onChange={(e) => setFeeding(e.target.value)} />
         </label>
 
         <label>
-          Stockgewicht (kg)
+          {t.entryForm.weight}
           <input
             type="number"
             step="0.1"
@@ -225,19 +228,19 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
       </div>
 
       <label className="full-width">
-        Notizen
+        {t.entryForm.notes}
         <textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
       </label>
 
       {!isPending && entry.photo_keys && entry.photo_keys.length > 0 && (
         <div className="full-width">
-          <span className="field-label">Vorhandene Fotos</span>
+          <span className="field-label">{t.entryForm.existingPhotos}</span>
           <div className="entry-photos edit-photos">
             {entry.photo_keys.map((key) => {
               const removed = removedKeys.includes(key);
               return (
                 <div key={key} className={`edit-photo-thumb ${removed ? "removed" : ""}`}>
-                  <img src={apiUrl(`/api/photo?key=${key}`)} alt="Stockkontrolle" />
+                  <img src={apiUrl(`/api/photo?key=${key}`)} alt={t.entryList.photoAlt} />
                   <button
                     type="button"
                     className="remove-photo-btn"
@@ -245,7 +248,7 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
                       setRemovedKeys((prev) => (removed ? prev.filter((k) => k !== key) : [...prev, key]))
                     }
                   >
-                    {removed ? "Zurückholen" : "Entfernen"}
+                    {removed ? t.entryForm.restorePhoto : t.entryForm.removePhoto}
                   </button>
                 </div>
               );
@@ -256,13 +259,13 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
 
       {isPending && entry.localPhotoUrls && entry.localPhotoUrls.length > 0 && (
         <div className="full-width">
-          <span className="field-label">Vorhandene Fotos</span>
+          <span className="field-label">{t.entryForm.existingPhotos}</span>
           <div className="entry-photos edit-photos">
             {entry.localPhotoUrls.map((url, i) => {
               const removed = removedIndices.includes(i);
               return (
                 <div key={url} className={`edit-photo-thumb ${removed ? "removed" : ""}`}>
-                  <img src={url} alt="Stockkontrolle" />
+                  <img src={url} alt={t.entryList.photoAlt} />
                   <button
                     type="button"
                     className="remove-photo-btn"
@@ -270,7 +273,7 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
                       setRemovedIndices((prev) => (removed ? prev.filter((idx) => idx !== i) : [...prev, i]))
                     }
                   >
-                    {removed ? "Zurückholen" : "Entfernen"}
+                    {removed ? t.entryForm.restorePhoto : t.entryForm.removePhoto}
                   </button>
                 </div>
               );
@@ -280,7 +283,7 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
       )}
 
       <label className="full-width">
-        Weitere Fotos hinzufügen
+        {t.entryForm.addMorePhotos}
         <input type="file" accept="image/*" multiple onChange={(e) => setNewPhotos(e.target.files)} />
       </label>
 
@@ -288,10 +291,10 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
 
       <div className="edit-form-actions">
         <button type="button" className="secondary" onClick={onCancel}>
-          Abbrechen
+          {t.common.cancel}
         </button>
         <button type="submit" disabled={submitting}>
-          {submitting ? "Speichere…" : "Änderungen speichern"}
+          {submitting ? t.common.saving : t.entryForm.saveChanges}
         </button>
       </div>
     </form>

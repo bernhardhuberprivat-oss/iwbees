@@ -8,11 +8,22 @@ import HarvestSummary from "./HarvestSummary";
 import UserPicker from "./UserPicker";
 import Paywall from "./Paywall";
 import AdminPanel from "./AdminPanel";
+import { Capacitor } from "@capacitor/core";
 import { CurrentUser, getStoredUser, clearStoredUser, storeUser } from "./userSession";
 import { cacheGet, cacheSet, getPendingEntries, deletePendingEntry, pendingToDisplayEntry, syncPendingEntries } from "./offline";
 import { readableTextColor, hiveRingColor } from "./colorUtils";
 import { apiUrl } from "./apiBase";
-import { isTrialActive, checkSubscription, isAdminUser, EULA_URL, PRIVACY_URL, openLegalLink } from "./subscription";
+import { useT, useLang, LanguageSwitch } from "./i18n";
+import {
+  isTrialActive,
+  checkSubscription,
+  isAdminUser,
+  EULA_URL,
+  PRIVACY_URL,
+  openLegalLink,
+  refreshWebSubscriptionStatus,
+  openWebBillingPortal,
+} from "./subscription";
 
 function formatDateDE(dateStr: string) {
   const [y, m, d] = dateStr.split("-");
@@ -21,26 +32,39 @@ function formatDateDE(dateStr: string) {
 
 // Präfix, an dem automatisch erzeugte Stammdaten-Änderungsprotokolle erkannt werden,
 // damit sie in einem eigenen Reiter statt bei den normalen Tageseinträgen erscheinen.
+//
+// WICHTIG: bleibt bewusst IMMER auf Deutsch (samt formatDateDE im DD.MM.YYYY-Format),
+// unabhängig von der aktuell gewählten Anzeigesprache - dieser Präfix ist ein reiner
+// interner Erkennungs-Marker (notes?.startsWith(...)) und darf sich nie ändern, sonst
+// würden alte, in Deutsch angelegte Protokolleinträge nicht mehr erkannt, sobald jemand
+// auf Englisch umschaltet. Nur die einzelnen Änderungszeilen darunter (describeStockPatch)
+// werden in der jeweils aktuellen Anzeigesprache formuliert.
 const STOCK_CHANGE_PREFIX = "Änderung an allgemeinen Daten vom Stock am";
 
-// Übersetzt eine Änderung an den Stock-Stammdaten in lesbare Zeilen für den Tagebucheintrag.
-function describeStockPatch(patch: Record<string, unknown>): string[] {
+// Übersetzt eine Änderung an den Stock-Stammdaten in lesbare Zeilen für den Tagebucheintrag,
+// in der aktuell eingestellten Anzeigesprache (siehe Hinweis zu STOCK_CHANGE_PREFIX oben).
+function describeStockPatch(patch: Record<string, unknown>, t: ReturnType<typeof useT>): string[] {
   const lines: string[] = [];
-  if ("name" in patch) lines.push(`Name: ${patch.name || "–"}`);
-  if ("color" in patch) lines.push("Markierungsfarbe geändert");
-  if ("category" in patch) lines.push(`Kategorie: ${patch.category || "–"}`);
+  if ("name" in patch) lines.push(t.app.stockChangeName(String(patch.name || "")));
+  if ("color" in patch) lines.push(t.app.stockChangeColor);
+  if ("category" in patch) lines.push(t.app.stockChangeCategory(String(patch.category || "")));
   if ("queenYear" in patch) {
     const year = patch.queenYear as number | null;
     const color = year ? getQueenColorForYear(year) : null;
-    lines.push(`Königin-Zuchtjahr: ${year ? `${year}${color ? ` (${color.name})` : ""}` : "–"}`);
+    const colorName = color ? t.colorNames[color.name] ?? color.name : null;
+    lines.push(t.app.stockChangeQueenYear(year ? `${year}${colorName ? ` (${colorName})` : ""}` : "–"));
   }
-  if ("colonyStrength" in patch) lines.push(`Volksstärke: ${patch.colonyStrength || "–"}`);
+  if ("colonyStrength" in patch) {
+    const raw = String(patch.colonyStrength || "");
+    lines.push(t.app.stockChangeStrength(raw ? t.strengthLabels[raw] ?? raw : ""));
+  }
   return lines;
 }
 
 type AccessState = "checking" | "granted" | "locked";
 
 export default function App() {
+  const t = useT();
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => getStoredUser());
   const [access, setAccess] = useState<AccessState>("checking");
 
@@ -55,13 +79,40 @@ export default function App() {
     let cancelled = false;
 
     async function evaluateAccess() {
+      let user = currentUser!;
+
+      // Web-Build: Abo-Status frisch vom Server holen, bevor wir isTrialActive()/
+      // checkSubscription() auswerten - die aus dem localStorage gecachten Werte
+      // (userSession.ts) könnten veraltet sein, z. B. direkt nach einer Rückkehr von
+      // Stripes Checkout, wo der Webhook noch nicht durchgelaufen ist. Kommt man mit
+      // ?stripe=success zurück, kurz ein paar Mal nachfragen, statt den Nutzer sofort
+      // wieder an der Paywall abzuweisen.
+      if (!Capacitor.isNativePlatform()) {
+        const cameFromCheckout = new URLSearchParams(window.location.search).get("stripe") === "success";
+        const attempts = cameFromCheckout ? 5 : 1;
+        for (let i = 0; i < attempts; i++) {
+          user = await refreshWebSubscriptionStatus(user);
+          if (!cancelled) {
+            setCurrentUser(user);
+            storeUser(user);
+          }
+          if (!cameFromCheckout || user.webSubscriptionActive) break;
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+        if (cameFromCheckout) {
+          const url = new URL(window.location.href);
+          url.searchParams.delete("stripe");
+          window.history.replaceState({}, "", url.toString());
+        }
+      }
+
       // isTrialActive() prüft nur die 30-Tage-Testphase; Admin-Konten werden erst im
       // checkSubscription()-Fallback unten geprüft (siehe isAdminUser() in subscription.ts).
-      if (isTrialActive(currentUser!)) {
+      if (isTrialActive(user)) {
         if (!cancelled) setAccess("granted");
         return;
       }
-      const subscribed = await checkSubscription(currentUser!);
+      const subscribed = await checkSubscription(user);
       if (!cancelled) setAccess(subscribed ? "granted" : "locked");
     }
 
@@ -69,14 +120,16 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [currentUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id]);
 
   if (!currentUser) {
     return (
       <div className="app">
+        <LanguageSwitch />
         <header>
-          <h1>🐝 Bienentagebuch</h1>
-          <p className="subtitle">Kontrollen für deine 10 Bienenstöcke</p>
+          <h1>{t.app.title}</h1>
+          <p className="subtitle">{t.app.subtitleLogin}</p>
         </header>
         <UserPicker onLogin={setCurrentUser} />
       </div>
@@ -86,10 +139,11 @@ export default function App() {
   if (access === "checking") {
     return (
       <div className="app">
+        <LanguageSwitch />
         <header>
-          <h1>🐝 isybee</h1>
+          <h1>{t.app.title}</h1>
         </header>
-        <p className="subtitle">Einen Moment …</p>
+        <p className="subtitle">{t.common.moment}</p>
       </div>
     );
   }
@@ -113,6 +167,8 @@ interface DiaryProps {
 }
 
 function Diary({ user, onSwitchUser }: DiaryProps) {
+  const t = useT();
+  const { lang } = useLang();
   const [selectedHive, setSelectedHive] = useState<number | "all">("all");
   const [harvestEntries, setHarvestEntries] = useState<HarvestEntry[]>([]);
   const [harvestYearTotal, setHarvestYearTotal] = useState(0);
@@ -132,6 +188,19 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   const [savingHiveCount, setSavingHiveCount] = useState(false);
   const [totalUserCount, setTotalUserCount] = useState<number | null>(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [openingBillingPortal, setOpeningBillingPortal] = useState(false);
+
+  async function handleManageWebSubscription() {
+    setOpeningBillingPortal(true);
+    const result = await openWebBillingPortal(user, t.subscriptionMsg);
+    // Bei Erfolg navigiert der Browser sofort zu Stripe weg - setOpeningBillingPortal(false)
+    // wird dann praktisch nie mehr sichtbar. Bei einem Fehler (z. B. kein Kunde bei
+    // Stripe gefunden) bleibt die Seite hier und braucht den zurückgesetzten Zustand.
+    setOpeningBillingPortal(false);
+    if (!result.success && result.message) {
+      window.alert(result.message);
+    }
+  }
 
   useEffect(() => {
     if (!isAdminUser(user)) return;
@@ -153,7 +222,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
     e.preventDefault();
     const next = Number(hiveCountInput);
     if (!Number.isInteger(next) || next < 1 || next > 60) {
-      setHiveCountError("Bitte eine Zahl zwischen 1 und 60 eingeben.");
+      setHiveCountError(t.app.hiveCountError);
       return;
     }
     setSavingHiveCount(true);
@@ -172,7 +241,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       }
       setShowHiveCountEditor(false);
     } catch {
-      setHiveCountError("Speichern fehlgeschlagen. Bitte Internetverbindung prüfen.");
+      setHiveCountError(t.app.hiveCountSaveError);
     } finally {
       setSavingHiveCount(false);
     }
@@ -275,7 +344,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   }, []);
 
   async function handleDelete(id: number) {
-    if (!confirm("Diesen Eintrag wirklich löschen?")) return;
+    if (!confirm(t.app.confirmDeleteEntry)) return;
     if (id < 0) {
       await deletePendingEntry(-id);
       loadEntries();
@@ -318,7 +387,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   // nicht mit vielen gleichlautenden Einträgen zuspammt. Änderungen am selben Tag werden
   // an den bereits bestehenden Log-Eintrag angehängt, damit man sieht, was sich geändert hat.
   async function logStockChange(hive: number, patch: Record<string, unknown>, info: HiveInfo) {
-    const changeLines = describeStockPatch(patch);
+    const changeLines = describeStockPatch(patch, t);
     if (changeLines.length === 0) return;
 
     const todayStr = new Date().toISOString().slice(0, 10);
@@ -398,9 +467,10 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
 
   return (
     <div className="app">
+      <LanguageSwitch />
       <header>
-        <h1>🐝 Bienentagebuch</h1>
-        <p className="subtitle">Kontrollen für deine {hiveCount} Bienenstöcke</p>
+        <h1>{t.app.title}</h1>
+        <p className="subtitle">{t.app.subtitleDiary(hiveCount)}</p>
         <button
           type="button"
           className="hive-count-toggle"
@@ -410,12 +480,12 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
             setShowHiveCountEditor((v) => !v);
           }}
         >
-          Anzahl Bienenstöcke ändern
+          {t.app.hiveCountToggle}
         </button>
         {showHiveCountEditor && (
           <form className="hive-count-editor" onSubmit={handleSaveHiveCount}>
             <label>
-              Anzahl Bienenstöcke
+              {t.app.hiveCountLabel}
               <input
                 type="number"
                 min={1}
@@ -428,10 +498,10 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
             {hiveCountError && <p className="error">{hiveCountError}</p>}
             <div className="hive-count-editor-actions">
               <button type="button" className="secondary" onClick={() => setShowHiveCountEditor(false)}>
-                Abbrechen
+                {t.common.cancel}
               </button>
               <button type="submit" disabled={savingHiveCount}>
-                {savingHiveCount ? "Speichere…" : "Speichern"}
+                {savingHiveCount ? t.common.saving : t.common.save}
               </button>
             </div>
           </form>
@@ -439,32 +509,37 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       </header>
 
       <div className="user-bar">
-        <span>👤 {user.name}</span>
+        <span>{t.app.userGreeting(user.name)}</span>
         {totalUserCount !== null && (
-          <span className="admin-user-count" title="Nur für dich als Admin sichtbar">
-            👥 {totalUserCount} {totalUserCount === 1 ? "Nutzer" : "Nutzer:innen"} insgesamt
+          <span className="admin-user-count" title={t.app.adminOnlyHint}>
+            {t.app.totalUsers(totalUserCount)}
           </span>
         )}
         {isAdminUser(user) && (
           <button className="link-btn" onClick={() => setShowAdminPanel(true)}>
-            Nutzer verwalten
+            {t.app.manageUsers}
+          </button>
+        )}
+        {!Capacitor.isNativePlatform() && user.webSubscriptionActive && !user.isGifted && (
+          <button className="link-btn" onClick={handleManageWebSubscription} disabled={openingBillingPortal}>
+            {openingBillingPortal ? t.common.moment : t.app.manageSubscription}
           </button>
         )}
         <button className="link-btn" onClick={onSwitchUser}>
-          Nutzer wechseln
+          {t.app.switchUser}
         </button>
       </div>
 
       {showAdminPanel && <AdminPanel adminUser={user} onClose={() => setShowAdminPanel(false)} />}
 
       <div className={`status-bar ${isOnline ? "online" : "offline"}`}>
-        <span>{isOnline ? "🟢 Online" : "🔴 Kein Internet"}</span>
+        <span>{isOnline ? t.app.online : t.app.offline}</span>
         {pendingCount > 0 && (
           <span className="pending-info">
-            {pendingCount} {pendingCount === 1 ? "Eintrag wartet" : "Einträge warten"} auf Upload
+            {t.app.pendingInfo(pendingCount)}
             {isOnline && (
               <button className="sync-btn" onClick={trySync} disabled={syncing}>
-                {syncing ? "Synchronisiere…" : "Jetzt synchronisieren"}
+                {syncing ? t.app.syncing : t.app.syncNow}
               </button>
             )}
           </span>
@@ -476,12 +551,12 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
           className={selectedHive === "all" ? "active" : ""}
           onClick={() => setSelectedHive("all")}
         >
-          Alle
+          {t.app.tabAll}
         </button>
         {buildHiveRange(hiveCount).map((h) => {
           const info = hiveInfo[h];
           const color = info?.color;
-          const label = info?.name?.trim() || `Stock ${h}`;
+          const label = info?.name?.trim() || t.common.hiveFallback(h);
           const isActive = selectedHive === h;
           const style = color
             ? isActive
@@ -506,14 +581,14 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
 
       <div className="harvest-bar">
         <button type="button" className="harvest-open-btn" onClick={() => setShowHarvestPanel(true)}>
-          🍯 Ertrag eingeben
+          {t.app.harvestEnter}
         </button>
         <button
           type="button"
           className="harvest-year-badge harvest-year-badge-btn"
           onClick={() => setShowHarvestSummary(true)}
         >
-          🍯 {harvestYearTotal} kg ({new Date().getFullYear()})
+          {t.app.harvestYearBadge(harvestYearTotal, new Date().getFullYear())}
         </button>
       </div>
 
@@ -560,12 +635,10 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       )}
 
       <main>
-        {selectedHive === "all" && (
-          <p className="muted hint">Wähle oben einen Stock aus, um einen neuen Eintrag anzulegen.</p>
-        )}
+        {selectedHive === "all" && <p className="muted hint">{t.app.hintPickHive}</p>}
         <section>
           <div className="section-heading-row">
-            <h2>Tageseinträge</h2>
+            <h2>{t.app.dailyEntries}</h2>
             {selectedHive !== "all" && (
               <button
                 type="button"
@@ -578,10 +651,10 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
                 onClick={() => setShowNewEntryForm((v) => !v)}
               >
                 {showNewEntryForm
-                  ? "Neuer Tageseintrag ✕"
+                  ? t.app.newEntryToggleClose
                   : isFirstEntryForSelectedHive
-                  ? "+ Den ersten Tagebucheintrag machen"
-                  : "+ Neuer Tageseintrag"}
+                  ? t.app.newEntryToggleFirst
+                  : t.app.newEntryToggleNormal}
               </button>
             )}
           </div>
@@ -617,11 +690,11 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
 
       <footer className="app-legal-footer">
         <button type="button" className="link-btn" onClick={() => openLegalLink(EULA_URL)}>
-          Nutzungsbedingungen
+          {t.app.eula}
         </button>
         <span aria-hidden="true">·</span>
-        <button type="button" className="link-btn" onClick={() => openLegalLink(PRIVACY_URL)}>
-          Datenschutzerklärung
+        <button type="button" className="link-btn" onClick={() => openLegalLink(PRIVACY_URL(lang))}>
+          {t.app.privacy}
         </button>
       </footer>
     </div>

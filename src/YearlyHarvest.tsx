@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, FormEvent } from "react";
 import { apiUrl } from "./apiBase";
+import { useT } from "./i18n";
 
 interface HarvestEntry {
   year: number;
@@ -14,7 +15,11 @@ function currentYear() {
   return new Date().getFullYear();
 }
 
+// Hinweis: diese Komponente wird aktuell von nirgendwo importiert (durch HarvestPanel/
+// HarvestSummary abgelöst) - bleibt trotzdem vollständig übersetzt, falls sie wieder
+// gebraucht wird.
 export default function YearlyHarvest({ userId }: Props) {
+  const t = useT();
   const [entries, setEntries] = useState<HarvestEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [year, setYear] = useState(currentYear());
@@ -29,10 +34,11 @@ export default function YearlyHarvest({ userId }: Props) {
       const data: HarvestEntry[] = await res.json();
       setEntries([...data].sort((a, b) => b.year - a.year));
     } catch {
-      setError("Erträge konnten nicht geladen werden.");
+      setError(t.yearlyHarvest.loadError);
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   useEffect(() => {
@@ -59,26 +65,26 @@ export default function YearlyHarvest({ userId }: Props) {
       setKg("");
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Fehler beim Speichern");
+      setError(err instanceof Error ? err.message : t.common.genericSaveError);
     } finally {
       setSubmitting(false);
     }
   }
 
   async function handleDelete(y: number) {
-    if (!confirm(`Ertrag für ${y} wirklich löschen?`)) return;
+    if (!confirm(t.yearlyHarvest.confirmDelete(y))) return;
     await fetch(apiUrl(`/api/harvest?userId=${userId}&year=${y}`), { method: "DELETE" });
     load();
   }
 
   return (
     <div className="harvest-view">
-      <h2 className="harvest-heading">🍯 Gesamtertrag pro Jahr</h2>
-      <p className="muted">Trage hier die insgesamt geerntete Honigmenge für ein Jahr ein – über alle Bienenstöcke zusammen.</p>
+      <h2 className="harvest-heading">{t.yearlyHarvest.heading}</h2>
+      <p className="muted">{t.yearlyHarvest.intro}</p>
 
       <form className="harvest-form" onSubmit={handleSubmit}>
         <label>
-          Jahr
+          {t.yearlyHarvest.yearLabel}
           <input
             type="number"
             value={year}
@@ -88,35 +94,35 @@ export default function YearlyHarvest({ userId }: Props) {
           />
         </label>
         <label>
-          Ertrag gesamt (kg)
+          {t.yearlyHarvest.totalLabel}
           <input
             type="number"
             step="0.1"
             min="0"
             value={kg}
             onChange={(e) => setKg(e.target.value)}
-            placeholder="z.B. 42.5"
+            placeholder={t.yearlyHarvest.totalPlaceholder}
           />
         </label>
         <button type="submit" disabled={submitting}>
-          {submitting ? "Speichere…" : "Speichern"}
+          {submitting ? t.common.saving : t.common.save}
         </button>
       </form>
 
       {error && <p className="error">{error}</p>}
 
       {loading ? (
-        <p className="muted">Lade…</p>
+        <p className="muted">{t.harvestSummary.loading}</p>
       ) : entries.length === 0 ? (
-        <p className="muted">Noch keine Erträge erfasst.</p>
+        <p className="muted">{t.yearlyHarvest.empty}</p>
       ) : (
         <div className="harvest-list">
           {entries.map((entry) => (
             <div className="harvest-row" key={entry.year}>
               <span className="harvest-year">{entry.year}</span>
-              <span className="harvest-kg">{entry.kg != null ? `${entry.kg} kg` : "–"}</span>
+              <span className="harvest-kg">{entry.kg != null ? `${entry.kg} kg` : t.common.none}</span>
               <button type="button" className="link-btn" onClick={() => startEdit(entry)}>
-                Bearbeiten
+                {t.common.edit}
               </button>
               <button type="button" className="delete-btn" onClick={() => handleDelete(entry.year)}>
                 ✕

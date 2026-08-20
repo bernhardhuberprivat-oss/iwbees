@@ -1,11 +1,10 @@
 import { useState } from "react";
+import { useT, useLang, dateLocale } from "./i18n";
 
 interface Props {
   value: string; // YYYY-MM-DD
   onChange: (value: string) => void;
 }
-
-const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -25,6 +24,8 @@ function isSameDay(a: Date, b: Date) {
 }
 
 export default function DatePicker({ value, onChange }: Props) {
+  const t = useT();
+  const { lang } = useLang();
   const selected = parseDateStr(value);
   const [viewYear, setViewYear] = useState(selected.getFullYear());
   const [viewMonth, setViewMonth] = useState(selected.getMonth());
@@ -53,7 +54,7 @@ export default function DatePicker({ value, onChange }: Props) {
     setViewYear(y);
   }
 
-  const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString("de-DE", {
+  const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString(dateLocale(lang), {
     month: "long",
     year: "numeric",
   });
@@ -61,17 +62,17 @@ export default function DatePicker({ value, onChange }: Props) {
   return (
     <div className="date-picker">
       <div className="date-picker-header">
-        <button type="button" onClick={goToPrevMonth} aria-label="Vorheriger Monat">
+        <button type="button" onClick={goToPrevMonth} aria-label={t.datePicker.prevMonth}>
           ‹
         </button>
         <span>{monthLabel}</span>
-        <button type="button" onClick={goToNextMonth} aria-label="Nächster Monat">
+        <button type="button" onClick={goToNextMonth} aria-label={t.datePicker.nextMonth}>
           ›
         </button>
       </div>
 
       <div className="date-picker-grid">
-        {WEEKDAYS.map((w) => (
+        {t.datePicker.weekdays.map((w) => (
           <div key={w} className="date-picker-weekday">
             {w}
           </div>

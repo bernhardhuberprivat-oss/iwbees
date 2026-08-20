@@ -35,6 +35,7 @@ body::before {
 }
 
 .app {
+  position: relative;
   max-width: 900px;
   margin: 0 auto;
   padding: calc(24px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(64px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
@@ -1790,4 +1791,35 @@ header h1 {
 .gift-toggle:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+/* Sprachumschalter (Deutsch/Englisch) - oben rechts in jedem App-Screen, siehe
+   LanguageSwitch in App.tsx / Paywall.tsx. */
+.lang-switch {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top));
+  right: calc(10px + env(safe-area-inset-right));
+  display: flex;
+  gap: 2px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px;
+  z-index: 10;
+}
+
+.lang-switch button {
+  border: none;
+  background: none;
+  padding: 3px 9px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 16px;
+  color: #ab9779;
+  cursor: pointer;
+}
+
+.lang-switch button.active {
+  background: var(--honey);
+  color: #fff;
 }

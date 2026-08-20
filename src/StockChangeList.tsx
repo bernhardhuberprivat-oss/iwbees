@@ -1,5 +1,6 @@
 import { Entry, HiveInfo } from "./types";
 import { readableTextColor } from "./colorUtils";
+import { useT, useLang, dateLocale } from "./i18n";
 
 interface Props {
   entries: Entry[];
@@ -9,10 +10,6 @@ interface Props {
   hideHiveBadge?: boolean;
   compact?: boolean;
   emptyMessage?: string;
-}
-
-function formatDate(d: string) {
-  return new Date(d).toLocaleDateString("de-DE");
 }
 
 // Zeigt Stammdaten-Änderungen kompakt gruppiert nach Tag an, statt als volle Eintragskarten -
@@ -26,8 +23,15 @@ export default function StockChangeList({
   compact,
   emptyMessage,
 }: Props) {
-  if (loading) return <p className="muted">Lade Änderungen…</p>;
-  if (entries.length === 0) return <p className="muted">{emptyMessage || "Noch keine Änderungen an den Stammdaten."}</p>;
+  const t = useT();
+  const { lang } = useLang();
+
+  function formatDate(d: string) {
+    return new Date(d).toLocaleDateString(dateLocale(lang));
+  }
+
+  if (loading) return <p className="muted">{t.stockChangeList.loading}</p>;
+  if (entries.length === 0) return <p className="muted">{emptyMessage || t.stockChangeList.empty}</p>;
 
   const groups: { date: string; entries: Entry[] }[] = [];
   for (const entry of entries) {
@@ -47,7 +51,7 @@ export default function StockChangeList({
           {group.entries.map((entry) => {
             const info = hiveInfo[entry.hive];
             const hiveColor = info?.color;
-            const hiveLabel = info?.name?.trim() || `Stock ${entry.hive}`;
+            const hiveLabel = info?.name?.trim() || t.common.hiveFallback(entry.hive);
             const badgeStyle = hiveColor
               ? { background: hiveColor, color: readableTextColor(hiveColor) }
               : undefined;
@@ -63,7 +67,7 @@ export default function StockChangeList({
                       {hiveLabel}
                     </span>
                   )}
-                  <button className="delete-btn" onClick={() => onDelete(entry.id)} title="Löschen">
+                  <button className="delete-btn" onClick={() => onDelete(entry.id)} title={t.common.delete}>
                     ✕
                   </button>
                 </div>

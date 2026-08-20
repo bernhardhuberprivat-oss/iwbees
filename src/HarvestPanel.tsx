@@ -2,6 +2,7 @@ import { useState, FormEvent } from "react";
 import { apiUrl } from "./apiBase";
 import { readableTextColor, hiveRingColor } from "./colorUtils";
 import { buildHiveRange, HiveInfo } from "./types";
+import { useT, useLang, dateLocale } from "./i18n";
 
 export interface HarvestEntry {
   id: number;
@@ -25,10 +26,6 @@ type Mode = "gesamt" | "stock";
 
 function today() {
   return new Date().toISOString().slice(0, 10);
-}
-
-function formatDateDE(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("de-DE");
 }
 
 function hiveBadgeStyle(color?: string | null) {
@@ -77,11 +74,17 @@ export default function HarvestPanel({
   onDeleted,
   onClose,
 }: Props) {
+  const t = useT();
+  const { lang } = useLang();
   const [mode, setMode] = useState<Mode>("gesamt");
   const [kg, setKg] = useState("");
   const [perStockKg, setPerStockKg] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  function formatDateDE(dateStr: string) {
+    return new Date(dateStr).toLocaleDateString(dateLocale(lang));
+  }
 
   async function postEntry(hive: number | null, value: number) {
     const res = await fetch(apiUrl("/api/harvest-entries"), {
@@ -99,7 +102,7 @@ export default function HarvestPanel({
     if (mode === "gesamt") {
       const value = Number(kg);
       if (!value || value <= 0) {
-        setError("Bitte eine Menge größer 0 eingeben.");
+        setError(t.harvestPanel.errTotalPositive);
         return;
       }
       setSubmitting(true);
@@ -109,7 +112,7 @@ export default function HarvestPanel({
         onSaved();
         onClose();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Fehler beim Speichern");
+        setError(err instanceof Error ? err.message : t.common.genericSaveError);
       } finally {
         setSubmitting(false);
       }
@@ -121,7 +124,7 @@ export default function HarvestPanel({
       .filter((e) => e.kg > 0);
 
     if (toSave.length === 0) {
-      setError("Bitte für mindestens einen Stock eine Menge größer 0 eingeben.");
+      setError(t.harvestPanel.errAnyPositive);
       return;
     }
 
@@ -134,14 +137,14 @@ export default function HarvestPanel({
       onSaved();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Fehler beim Speichern");
+      setError(err instanceof Error ? err.message : t.common.genericSaveError);
     } finally {
       setSubmitting(false);
     }
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Diesen Ertragseintrag wirklich löschen?")) return;
+    if (!confirm(t.harvestPanel.confirmDelete)) return;
     await fetch(apiUrl(`/api/harvest-entries?id=${id}&userId=${userId}`), { method: "DELETE" });
     onDeleted();
   }
@@ -151,46 +154,44 @@ export default function HarvestPanel({
   return (
     <div className="harvest-overlay" onClick={onClose}>
       <div className="harvest-panel" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="harvest-panel-close" onClick={onClose} aria-label="Schließen">
+        <button type="button" className="harvest-panel-close" onClick={onClose} aria-label={t.common.close}>
           ✕
         </button>
 
-        <h2 className="harvest-panel-heading">🍯 Ertrag eingeben</h2>
+        <h2 className="harvest-panel-heading">{t.harvestPanel.heading}</h2>
 
         <div className="date-toggle harvest-mode-toggle">
           <button type="button" className={mode === "gesamt" ? "active" : ""} onClick={() => setMode("gesamt")}>
-            Ertrag gesamt
+            {t.harvestPanel.modeTotal}
           </button>
           <button type="button" className={mode === "stock" ? "active" : ""} onClick={() => setMode("stock")}>
-            Ertrag pro Stock
+            {t.harvestPanel.modePerHive}
           </button>
         </div>
 
         <form className="harvest-panel-form" onSubmit={handleSubmit}>
-          <div className="harvest-panel-date">Datum: {formatDateDE(today())}</div>
+          <div className="harvest-panel-date">{t.harvestPanel.dateLabel(formatDateDE(today()))}</div>
 
           {mode === "gesamt" ? (
             <label>
-              Menge gesamt (kg)
+              {t.harvestPanel.totalAmount}
               <input
                 type="number"
                 step="0.1"
                 min="0"
                 autoFocus
-                placeholder="z.B. 12.5"
+                placeholder={t.harvestPanel.totalPlaceholder}
                 value={kg}
                 onChange={(e) => setKg(e.target.value)}
               />
             </label>
           ) : (
             <>
-              <p className="muted harvest-stock-hint">
-                Menge je Stock eintragen – leere Felder werden nicht gespeichert.
-              </p>
+              <p className="muted harvest-stock-hint">{t.harvestPanel.perHiveHint}</p>
               <div className="harvest-stock-grid">
                 {buildHiveRange(hiveCount).map((h) => {
                   const info = hiveInfo[h];
-                  const label = info?.name?.trim() || `Stock ${h}`;
+                  const label = info?.name?.trim() || t.common.hiveFallback(h);
                   return (
                     <div className="harvest-stock-row" key={h}>
                       <span className="hive-badge" style={hiveBadgeStyle(info?.color)}>
@@ -201,7 +202,7 @@ export default function HarvestPanel({
                         step="0.1"
                         min="0"
                         placeholder="0"
-                        aria-label={`Ertrag für ${label} (kg)`}
+                        aria-label={t.harvestPanel.hiveYieldLabel(label)}
                         value={perStockKg[h] ?? ""}
                         onChange={(e) =>
                           setPerStockKg((prev) => ({ ...prev, [h]: e.target.value }))
@@ -216,14 +217,14 @@ export default function HarvestPanel({
 
           {error && <p className="error">{error}</p>}
           <button type="submit" disabled={submitting}>
-            {submitting ? "Speichere…" : "Speichern"}
+            {submitting ? t.common.saving : t.common.save}
           </button>
         </form>
 
         <div className="harvest-history">
-          <h3 className="harvest-history-heading">Historie</h3>
+          <h3 className="harvest-history-heading">{t.harvestPanel.history}</h3>
           {groups.length === 0 ? (
-            <p className="muted">Noch keine Erträge erfasst.</p>
+            <p className="muted">{t.harvestPanel.noHistory}</p>
           ) : (
             <div className="harvest-history-list">
               {groups.map((group) => {
@@ -234,13 +235,13 @@ export default function HarvestPanel({
 
                     {group.gesamt.map((entry) => (
                       <div className="harvest-history-row" key={entry.id}>
-                        <span className="harvest-history-label hive-badge">Gesamt</span>
+                        <span className="harvest-history-label hive-badge">{t.harvestPanel.total}</span>
                         <span className="harvest-history-kg">{entry.kg} kg</span>
                         <button
                           type="button"
                           className="delete-btn"
                           onClick={() => handleDelete(entry.id)}
-                          title="Löschen"
+                          title={t.common.delete}
                         >
                           ✕
                         </button>
@@ -249,7 +250,7 @@ export default function HarvestPanel({
 
                     {group.perStock.map((entry) => {
                       const info = hiveInfo[entry.hive as number];
-                      const label = info?.name?.trim() || `Stock ${entry.hive}`;
+                      const label = info?.name?.trim() || t.common.hiveFallback(entry.hive as number);
                       return (
                         <div className="harvest-history-row" key={entry.id}>
                           <span className="harvest-history-label hive-badge" style={hiveBadgeStyle(info?.color)}>
@@ -260,7 +261,7 @@ export default function HarvestPanel({
                             type="button"
                             className="delete-btn"
                             onClick={() => handleDelete(entry.id)}
-                            title="Löschen"
+                            title={t.common.delete}
                           >
                             ✕
                           </button>
@@ -269,9 +270,7 @@ export default function HarvestPanel({
                     })}
 
                     {group.perStock.length > 1 && (
-                      <div className="harvest-history-day-total">
-                        Summe Stöcke: {stockTotal.toFixed(1)} kg
-                      </div>
+                      <div className="harvest-history-day-total">{t.harvestPanel.stockSum(stockTotal.toFixed(1))}</div>
                     )}
                   </div>
                 );
