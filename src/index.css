@@ -1902,3 +1902,74 @@ header h1 {
 .welcome-cta:hover {
   background: var(--honey-dark);
 }
+
+.welcome-install-link {
+  margin-top: 22px;
+  font-size: 0.85rem;
+}
+
+/* Installationsanleitung (InstallGuide.tsx) - wiederverwendet dasselbe Overlay/Panel-
+   Grundmuster wie .harvest-overlay/.harvest-panel (siehe dort), nur mit eigenem
+   Klassennamen, da hier zusätzlicher Inhalt (Plattform-Abschnitte, Schritt-Listen)
+   dazukommt. */
+.install-guide-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 14, 4, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.install-guide-panel {
+  position: relative;
+  background: var(--card);
+  border-radius: 14px;
+  padding: 24px;
+  width: 100%;
+  max-width: 440px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+
+.install-guide-intro {
+  margin-top: 0;
+}
+
+.install-guide-platform {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.install-guide-platform:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.install-guide-platform h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.install-guide-steps {
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.92rem;
+  color: #5a4632;
+  text-align: left;
+}
+
+.install-guide-panel h3 {
+  text-align: left;
+}
+
+.install-guide-outro {
+  margin-bottom: 0;
+}

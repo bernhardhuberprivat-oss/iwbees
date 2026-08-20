@@ -7,6 +7,7 @@ import HarvestPanel, { HarvestEntry } from "./HarvestPanel";
 import HarvestSummary from "./HarvestSummary";
 import UserPicker from "./UserPicker";
 import Welcome from "./Welcome";
+import InstallGuide from "./InstallGuide";
 import Paywall from "./Paywall";
 import AdminPanel from "./AdminPanel";
 import { Capacitor } from "@capacitor/core";
@@ -223,6 +224,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   const [totalUserCount, setTotalUserCount] = useState<number | null>(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [openingBillingPortal, setOpeningBillingPortal] = useState(false);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
 
   async function handleManageWebSubscription() {
     setOpeningBillingPortal(true);
@@ -723,6 +725,14 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       </main>
 
       <footer className="app-legal-footer">
+        {!Capacitor.isNativePlatform() && (
+          <>
+            <button type="button" className="link-btn" onClick={() => setShowInstallGuide(true)}>
+              {t.installGuide.trigger}
+            </button>
+            <span aria-hidden="true">·</span>
+          </>
+        )}
         <button type="button" className="link-btn" onClick={() => openLegalLink(EULA_URL)}>
           {t.app.eula}
         </button>
@@ -731,6 +741,8 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
           {t.app.privacy}
         </button>
       </footer>
+
+      {showInstallGuide && <InstallGuide onClose={() => setShowInstallGuide(false)} />}
     </div>
   );
 }

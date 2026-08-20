@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useT } from "./i18n";
+import InstallGuide from "./InstallGuide";
 
 // Willkommens-/Onboarding-Bildschirm, der einer Person nur beim allerersten Öffnen
 // der App angezeigt wird (bevor es überhaupt ein Konto gibt) - siehe hasSeenWelcome()/
@@ -12,6 +14,7 @@ interface Props {
 
 export default function Welcome({ onGetStarted }: Props) {
   const t = useT();
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
 
   return (
     <div className="app welcome-screen">
@@ -30,6 +33,12 @@ export default function Welcome({ onGetStarted }: Props) {
       <button type="button" className="welcome-cta" onClick={onGetStarted}>
         {t.welcome.cta}
       </button>
+
+      <button type="button" className="link-btn welcome-install-link" onClick={() => setShowInstallGuide(true)}>
+        {t.installGuide.trigger}
+      </button>
+
+      {showInstallGuide && <InstallGuide onClose={() => setShowInstallGuide(false)} />}
     </div>
   );
 }
