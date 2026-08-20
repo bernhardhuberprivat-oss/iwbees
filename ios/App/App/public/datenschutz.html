@@ -41,7 +41,8 @@
   isybee ist ein digitales Bienentagebuch. Um es zu nutzen, legst du ein Benutzerkonto mit selbst gewähltem
   Namen und einer PIN an. Deine Tagebucheinträge und Fotos werden gespeichert, damit du und ggf. deine
   Familie darauf zugreifen könnt. Eine E-Mail-Adresse wird für die Registrierung nicht benötigt. Für die
-  kostenpflichtige Version in der iOS-App wird die Zahlungsabwicklung über Apple und RevenueCat abgewickelt.
+  kostenpflichtige Version wird die Zahlungsabwicklung in der iOS-App über Apple und RevenueCat, in der
+  Web-Version über Stripe abgewickelt (siehe Abschnitte 5 und 6).
 </div>
 
 <h2>3. Registrierung und Nutzerkonto</h2>
@@ -79,7 +80,20 @@
 </p>
 <p>Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung) bzw. lit. f (berechtigtes Interesse an Missbrauchsschutz).</p>
 
-<h2>6. Hosting und technische Infrastruktur</h2>
+<h2>6. Zahlungsabwicklung und Abonnement (Web/PWA)</h2>
+<p>
+  In der Web-Version (iwbees.netlify.app) wird das Monatsabo nach der kostenlosen Testphase über
+  <strong>Stripe, Inc.</strong> (Stripe Payments Europe, Ltd.) abgewickelt. Beim Abschluss des Abos
+  wirst du zur Checkout-Seite von Stripe weitergeleitet; isybee erhält oder speichert deine
+  Kartendaten dabei nicht. Stripe verarbeitet deine E-Mail-Adresse, Zahlungsdaten und den Abo-Status,
+  um die Zahlung abzuwickeln und das Abo zu verwalten.
+</p>
+<p>
+  Weitere Informationen: <a href="https://stripe.com/privacy" target="_blank" rel="noopener">Stripe Privacy Policy</a>.
+</p>
+<p>Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).</p>
+
+<h2>7. Hosting und technische Infrastruktur</h2>
 <p>
   isybee wird über <strong>Netlify, Inc.</strong> (USA) gehostet und nutzt Netlify-Funktionen sowie
   Netlify-Datenbank- und Blob-Speicherdienste zur Speicherung von Konten-, Tagebuch- und Bilddaten.
@@ -90,7 +104,7 @@
   auszuliefern. Es werden keine Cookies zu Werbe- oder Trackingzwecken eingesetzt.
 </p>
 
-<h2>7. Speicherdauer</h2>
+<h2>8. Speicherdauer</h2>
 <p>
   Deine Daten werden gespeichert, solange dein Konto besteht. Du kannst dein Konto und alle zugehörigen
   Daten (Einträge, Fotos, Kontodaten) jederzeit direkt in der App selbst löschen (Button „Diesen Nutzer
@@ -99,7 +113,7 @@
   entgegenstehen.
 </p>
 
-<h2>8. Deine Rechte</h2>
+<h2>9. Deine Rechte</h2>
 <p>Du hast im Rahmen der geltenden gesetzlichen Bestimmungen jederzeit das Recht auf:</p>
 <ul>
   <li>Auskunft über deine gespeicherten Daten (Art. 15 DSGVO)</li>
@@ -112,7 +126,7 @@
 </ul>
 <p>Zur Ausübung deiner Rechte genügt eine formlose Nachricht an die oben genannte Kontaktadresse.</p>
 
-<h2>9. Kontakt</h2>
+<h2>10. Kontakt</h2>
 <p>
   Bei Fragen zum Datenschutz wende dich bitte an:<br>
   Bernhard Huber, Meierhofgasse 33, 6361 Hopfgarten, Österreich<br>
