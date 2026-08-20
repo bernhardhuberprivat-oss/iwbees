@@ -1823,3 +1823,82 @@ header h1 {
   background: var(--honey);
   color: #fff;
 }
+
+/* Willkommens-/Onboarding-Bildschirm (Welcome.tsx) - nur beim allerersten Öffnen der
+   App zu sehen, bevor ein Konto existiert. .welcome-screen ergänzt die .app-Klasse
+   (max-width/Padding/Safe-Area sind davon schon abgedeckt). */
+.welcome-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-top: calc(64px + env(safe-area-inset-top));
+  min-height: 100vh;
+}
+
+.welcome-icon {
+  width: 112px;
+  height: 112px;
+  border-radius: 26px;
+  box-shadow: 0 10px 24px rgba(58, 42, 26, 0.18);
+}
+
+.welcome-wordmark {
+  margin: 18px 0 0;
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--dark);
+}
+
+.welcome-claim {
+  margin: 4px 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--honey-dark);
+}
+
+.welcome-bullets {
+  list-style: none;
+  margin: 32px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.welcome-bullets li {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #5a4632;
+}
+
+.welcome-trial {
+  margin: 28px 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #8a7256;
+}
+
+.welcome-cta {
+  margin: 20px 0 0;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 48px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--honey);
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(245, 166, 35, 0.35);
+}
+
+.welcome-cta:hover {
+  background: var(--honey-dark);
+}

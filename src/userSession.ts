@@ -45,3 +45,28 @@ export function clearStoredUser() {
     // ignorieren
   }
 }
+
+// Merkt sich pro Gerät, ob der Willkommens-/Onboarding-Bildschirm (Welcome.tsx) schon
+// gezeigt wurde - der soll nur beim allerersten Öffnen der App erscheinen, bevor
+// überhaupt ein Konto existiert. Bewusst ein eigener, simpler Flag statt an den
+// Nutzer-Login gekoppelt, damit er auch dann nicht erneut aufploppt, wenn jemand sich
+// abmeldet/den Nutzer wechselt (siehe onSwitchUser in App.tsx).
+const WELCOME_SEEN_KEY = "isybee:welcomeSeen";
+
+export function hasSeenWelcome(): boolean {
+  try {
+    return localStorage.getItem(WELCOME_SEEN_KEY) === "1";
+  } catch {
+    // localStorage nicht verfügbar - im Zweifel lieber den Willkommens-Bildschirm
+    // überspringen, als jemanden bei jedem Start erneut damit zu blockieren.
+    return true;
+  }
+}
+
+export function markWelcomeSeen() {
+  try {
+    localStorage.setItem(WELCOME_SEEN_KEY, "1");
+  } catch {
+    // ignorieren
+  }
+}

@@ -6,10 +6,18 @@ import ColorPicker from "./ColorPicker";
 import HarvestPanel, { HarvestEntry } from "./HarvestPanel";
 import HarvestSummary from "./HarvestSummary";
 import UserPicker from "./UserPicker";
+import Welcome from "./Welcome";
 import Paywall from "./Paywall";
 import AdminPanel from "./AdminPanel";
 import { Capacitor } from "@capacitor/core";
-import { CurrentUser, getStoredUser, clearStoredUser, storeUser } from "./userSession";
+import {
+  CurrentUser,
+  getStoredUser,
+  clearStoredUser,
+  storeUser,
+  hasSeenWelcome,
+  markWelcomeSeen,
+} from "./userSession";
 import { cacheGet, cacheSet, getPendingEntries, deletePendingEntry, pendingToDisplayEntry, syncPendingEntries } from "./offline";
 import { readableTextColor, hiveRingColor } from "./colorUtils";
 import { apiUrl } from "./apiBase";
@@ -67,6 +75,15 @@ export default function App() {
   const t = useT();
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => getStoredUser());
   const [access, setAccess] = useState<AccessState>("checking");
+  // Willkommens-Bildschirm nur beim allerersten Öffnen der App (siehe Welcome.tsx/
+  // hasSeenWelcome()) - bleibt für den Rest der Session false, auch wenn später über
+  // "Nutzer wechseln" erneut die Login-Ansicht erscheint.
+  const [showWelcome, setShowWelcome] = useState(() => !hasSeenWelcome());
+  // Wird true, wenn "Los geht's" auf dem Willkommens-Bildschirm getippt wurde, damit
+  // UserPicker direkt im Anlege-Formular statt im Login startet. Setzt sich nach dem
+  // ersten erfolgreichen Login/Anlegen automatisch wieder zurück (siehe onLogin unten),
+  // damit ein späteres "Nutzer wechseln" wieder ganz normal im Login-Modus landet.
+  const [pendingCreateMode, setPendingCreateMode] = useState(false);
 
   function handleSwitchUser() {
     clearStoredUser();
@@ -124,6 +141,17 @@ export default function App() {
   }, [currentUser?.id]);
 
   if (!currentUser) {
+    if (showWelcome) {
+      return (
+        <Welcome
+          onGetStarted={() => {
+            markWelcomeSeen();
+            setShowWelcome(false);
+            setPendingCreateMode(true);
+          }}
+        />
+      );
+    }
     return (
       <div className="app">
         <LanguageSwitch />
@@ -131,7 +159,13 @@ export default function App() {
           <h1>{t.app.title}</h1>
           <p className="subtitle">{t.app.subtitleLogin}</p>
         </header>
-        <UserPicker onLogin={setCurrentUser} />
+        <UserPicker
+          onLogin={(user) => {
+            setPendingCreateMode(false);
+            setCurrentUser(user);
+          }}
+          initialMode={pendingCreateMode ? "create" : "login"}
+        />
       </div>
     );
   }

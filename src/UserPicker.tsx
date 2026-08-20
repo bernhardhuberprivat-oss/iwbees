@@ -5,13 +5,17 @@ import { useT } from "./i18n";
 
 interface Props {
   onLogin: (user: CurrentUser) => void;
+  // Optional: startet direkt im Anlege-Formular statt im Login - genutzt, wenn jemand
+  // gerade vom Willkommens-Bildschirm (Welcome.tsx) kommt und "Los geht's" getippt hat,
+  // dort ergibt ein Login-Formular für ein noch nicht existierendes Konto keinen Sinn.
+  initialMode?: Mode;
 }
 
 type Mode = "login" | "create";
 
-export default function UserPicker({ onLogin }: Props) {
+export default function UserPicker({ onLogin, initialMode }: Props) {
   const t = useT();
-  const [mode, setMode] = useState<Mode>("login");
+  const [mode, setMode] = useState<Mode>(initialMode ?? "login");
   const [name, setName] = useState("");
   const [pin, setPin] = useState("");
   const [pin2, setPin2] = useState("");

@@ -64,7 +64,7 @@ const de = {
   },
   app: {
     title: "🐝 isybee",
-    subtitleLogin: "Kontrollen für deine 10 Bienenstöcke",
+    subtitleLogin: "Dein digitales Bienentagebuch",
     subtitleDiary: (n: number) => `Kontrollen für deine ${n} Bienenstöcke`,
     hiveCountToggle: "Anzahl Bienenstöcke ändern",
     hiveCountLabel: "Anzahl Bienenstöcke",
@@ -99,6 +99,14 @@ const de = {
     stockChangeCategory: (cat: string) => `Kategorie: ${cat || "–"}`,
     stockChangeQueenYear: (text: string) => `Königin-Zuchtjahr: ${text}`,
     stockChangeStrength: (val: string) => `Volksstärke: ${val || "–"}`,
+  },
+  welcome: {
+    claim: "Dein digitales Bienentagebuch",
+    bullet1: "📋 Stockkontrollen digital erfassen",
+    bullet2: "📴 Funktioniert offline",
+    bullet3: "🍯 Ernte & Auswertung im Überblick",
+    trialInfo: "30 Tage kostenlos testen, danach 0,99 € / Monat",
+    cta: "Los geht's",
   },
   paywall: {
     subtitle: "Deine kostenlose Testphase ist abgelaufen",
@@ -345,7 +353,7 @@ const en: Dict = {
   },
   app: {
     title: "🐝 isybee",
-    subtitleLogin: "Track your 10 beehives",
+    subtitleLogin: "Your digital beekeeping diary",
     subtitleDiary: (n: number) => `Track your ${n} beehives`,
     hiveCountToggle: "Change number of hives",
     hiveCountLabel: "Number of hives",
@@ -378,6 +386,14 @@ const en: Dict = {
     stockChangeCategory: (cat: string) => `Category: ${cat || "–"}`,
     stockChangeQueenYear: (text: string) => `Queen year: ${text}`,
     stockChangeStrength: (val: string) => `Colony strength: ${val || "–"}`,
+  },
+  welcome: {
+    claim: "Your digital beekeeping diary",
+    bullet1: "📋 Log hive inspections digitally",
+    bullet2: "📴 Works offline",
+    bullet3: "🍯 Harvest & stats at a glance",
+    trialInfo: "30 days free, then 0.99 € / month",
+    cta: "Get started",
   },
   paywall: {
     subtitle: "Your free trial has ended",
