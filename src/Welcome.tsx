@@ -10,9 +10,14 @@ import InstallGuide from "./InstallGuide";
 // einem nackten Login-Formular zu starten.
 interface Props {
   onGetStarted: () => void;
+  // Für Personen, die isybee auf einem neuen/anderen Gerät oder Browser öffnen und
+  // bereits ein Konto haben (z. B. zweites Handy, neu installierter Browser, Handy
+  // zurückgesetzt). Ohne diesen Button landeten sie zwangsläufig im Anlege-Formular,
+  // weil onGetStarted UserPicker direkt im "create"-Modus startet - siehe App.tsx.
+  onLogin: () => void;
 }
 
-export default function Welcome({ onGetStarted }: Props) {
+export default function Welcome({ onGetStarted, onLogin }: Props) {
   const t = useT();
   const [showInstallGuide, setShowInstallGuide] = useState(false);
 
@@ -33,6 +38,13 @@ export default function Welcome({ onGetStarted }: Props) {
       <button type="button" className="welcome-cta" onClick={onGetStarted}>
         {t.welcome.cta}
       </button>
+
+      <p className="welcome-login-hint">
+        {t.welcome.existingAccountText}{" "}
+        <button type="button" className="link-btn welcome-login-link" onClick={onLogin}>
+          {t.welcome.existingAccountCta}
+        </button>
+      </p>
 
       <button type="button" className="link-btn welcome-install-link" onClick={() => setShowInstallGuide(true)}>
         {t.installGuide.trigger}

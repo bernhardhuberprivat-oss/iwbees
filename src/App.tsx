@@ -150,6 +150,11 @@ export default function App() {
             setShowWelcome(false);
             setPendingCreateMode(true);
           }}
+          onLogin={() => {
+            markWelcomeSeen();
+            setShowWelcome(false);
+            setPendingCreateMode(false);
+          }}
         />
       );
     }

@@ -107,6 +107,8 @@ const de = {
     bullet3: "🍯 Ernte & Auswertung im Überblick",
     trialInfo: "30 Tage kostenlos testen, danach 0,99 € / Monat",
     cta: "Los geht's",
+    existingAccountText: "Du hast schon ein Konto?",
+    existingAccountCta: "Anmelden",
   },
   installGuide: {
     trigger: "📲 Wie installiere ich isybee als App?",
@@ -410,6 +412,8 @@ const en: Dict = {
     bullet3: "🍯 Harvest & stats at a glance",
     trialInfo: "30 days free, then 0.99 € / month",
     cta: "Get started",
+    existingAccountText: "Already have an account?",
+    existingAccountCta: "Log in",
   },
   installGuide: {
     trigger: "📲 How do I install isybee as an app?",

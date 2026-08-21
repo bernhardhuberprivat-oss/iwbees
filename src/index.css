@@ -3,8 +3,27 @@
   --honey-dark: #d4880f;
   --dark: #3a2a1a;
   --bg: #fffaf0;
-  --card: #ffffff;
+  /* --card ist jetzt teiltransparent (statt #ffffff) - das ist die Basis fuer den
+     "Liquid Glass"-Look: alle Oberflaechen, die var(--card) als background-color
+     verwenden, bekommen dadurch automatisch die Durchsicht, die zusammen mit
+     backdrop-filter (siehe Abschnitt "Liquid Glass" ganz unten) den Frosted-Glass-
+     Effekt ergibt. Ohne den farbigen, leicht verschwommenen Hintergrund (.app-glass-ambient
+     unten) wuerde man davon allerdings kaum etwas sehen, da Blur auf einer flachen
+     Farbe optisch nichts veraendert. */
+  --card: rgba(255, 255, 255, 0.55);
   --border: #eadfc9;
+
+  /* --- Liquid-Glass-Design-Tokens --- */
+  --glass-blur: 22px;
+  --glass-saturate: 180%;
+  --glass-border: rgba(255, 255, 255, 0.65);
+  --glass-border-soft: rgba(255, 255, 255, 0.4);
+  --glass-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 55%);
+  --glass-sheen-strong: linear-gradient(135deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0) 60%);
+  --glass-shadow: 0 8px 32px rgba(58, 42, 26, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  --glass-shadow-soft: 0 4px 16px rgba(58, 42, 26, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  --glass-scrim: rgba(35, 24, 10, 0.5);
+
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -14,7 +33,18 @@
 
 body {
   margin: 0;
-  background: var(--bg);
+  /* Warme, fest positionierte ("background-attachment: fixed") Farbflecken hinter dem
+     Inhalt - der eigentliche Zweck ist NICHT dekorativ, sondern technisch: backdrop-filter
+     (siehe "Liquid Glass"-Abschnitt unten) blurt/saettigt, was hinter einer Glas-Flaeche
+     sichtbar ist. Auf einer komplett flachen Farbe waere davon nichts zu sehen. Die
+     Flecken bleiben beim Scrollen stehen, sodass Karten je nach Position unterschiedlich
+     "durchscheinen" - das erzeugt die typische Tiefe/Bewegung des Effekts. */
+  background-image: radial-gradient(640px circle at 12% 8%, rgba(255, 214, 153, 0.6), transparent 60%),
+    radial-gradient(560px circle at 88% 15%, rgba(255, 176, 120, 0.45), transparent 55%),
+    radial-gradient(720px circle at 25% 92%, rgba(255, 221, 170, 0.5), transparent 60%),
+    radial-gradient(520px circle at 92% 88%, rgba(212, 136, 15, 0.28), transparent 55%);
+  background-attachment: fixed;
+  background-color: var(--bg);
   color: var(--dark);
 }
 
@@ -44,6 +74,9 @@ body::before {
 header {
   text-align: center;
   margin-bottom: 20px;
+  padding: 18px 16px 14px;
+  border-radius: 20px;
+  background-color: var(--card);
 }
 
 header h1 {
@@ -80,7 +113,7 @@ header h1 {
   margin: 10px auto 0;
   padding: 12px 16px;
   max-width: 260px;
-  background: var(--card);
+  background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: 10px;
 }
@@ -169,7 +202,7 @@ header h1 {
 .user-picker {
   max-width: 380px;
   margin: 0 auto;
-  background: var(--card);
+  background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 24px;
@@ -204,7 +237,7 @@ header h1 {
 }
 
 .user-option.new-user {
-  background: var(--card);
+  background-color: var(--card);
   border-style: dashed;
   color: #6b5a42;
 }
@@ -258,12 +291,12 @@ header h1 {
   font-weight: 700;
   cursor: pointer;
   border: none;
-  background: var(--honey);
+  background-color: var(--honey);
   color: white;
 }
 
 .user-form-actions button.secondary {
-  background: var(--card);
+  background-color: var(--card);
   border: 1px solid var(--border);
   color: var(--dark);
 }
@@ -285,7 +318,7 @@ header h1 {
   border-radius: 10px;
   margin-bottom: 16px;
   border: 1px solid var(--border);
-  background: var(--card);
+  background-color: var(--card);
 }
 
 .status-bar.offline {
@@ -304,7 +337,7 @@ header h1 {
 
 .sync-btn {
   border: 1px solid var(--honey-dark);
-  background: var(--honey);
+  background-color: var(--honey);
   color: white;
   border-radius: 999px;
   padding: 4px 12px;
@@ -348,7 +381,7 @@ header h1 {
 .hive-tabs button {
   position: relative;
   border: 2px solid var(--border);
-  background: var(--card);
+  background-color: var(--card);
   border-radius: 999px;
   padding: 8px 16px;
   cursor: pointer;
@@ -372,7 +405,7 @@ header h1 {
 }
 
 .hive-tabs button.active {
-  background: var(--honey);
+  background-color: var(--honey);
   border-color: var(--honey-dark);
   color: white;
 }
@@ -466,7 +499,9 @@ header h1 {
 .harvest-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(20, 14, 4, 0.6);
+  background: rgba(20, 14, 4, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -476,7 +511,7 @@ header h1 {
 
 .harvest-panel {
   position: relative;
-  background: var(--card);
+  background-color: var(--card);
   border-radius: 14px;
   padding: 24px;
   width: 100%;
@@ -652,7 +687,7 @@ header h1 {
 
 .entry-tabs button {
   border: 2px solid var(--border);
-  background: var(--card);
+  background-color: var(--card);
   border-radius: 999px;
   padding: 6px 14px;
   cursor: pointer;
@@ -667,7 +702,7 @@ header h1 {
 }
 
 .entry-tabs button.active {
-  background: var(--honey);
+  background-color: var(--honey);
   border-color: var(--honey-dark);
   color: white;
 }
@@ -686,7 +721,7 @@ header h1 {
 
 .new-entry-toggle {
   border: 2px solid var(--honey-dark);
-  background: var(--honey);
+  background-color: var(--honey);
   color: white;
   border-radius: 999px;
   padding: 6px 16px;
@@ -723,7 +758,7 @@ header h1 {
   flex-direction: column;
   align-items: stretch;
   gap: 14px;
-  background: var(--card);
+  background-color: var(--card);
   border: 5px double var(--honey);
   border-radius: 12px;
   padding: 16px 18px;
@@ -983,7 +1018,7 @@ header h1 {
 }
 
 .swatch.clear {
-  background: var(--card);
+  background-color: var(--card);
   color: #8a7256;
   font-size: 0.8rem;
   display: flex;
@@ -1005,7 +1040,7 @@ header h1 {
 }
 
 .entry-form {
-  background: var(--card);
+  background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 20px;
@@ -1126,7 +1161,7 @@ header h1 {
 
 .date-toggle button {
   border: 1px solid var(--border);
-  background: var(--card);
+  background-color: var(--card);
   border-radius: 999px;
   padding: 8px 14px;
   cursor: pointer;
@@ -1136,7 +1171,7 @@ header h1 {
 }
 
 .date-toggle button.active {
-  background: var(--honey);
+  background-color: var(--honey);
   border-color: var(--honey-dark);
   color: white;
 }
@@ -1208,14 +1243,14 @@ header h1 {
 }
 
 .date-picker-day.selected {
-  background: var(--honey);
+  background-color: var(--honey);
   border-color: var(--honey-dark);
   color: white;
   font-weight: 700;
 }
 
 .entry-form button[type="submit"] {
-  background: var(--honey);
+  background-color: var(--honey);
   color: white;
   border: none;
   border-radius: 8px;
@@ -1250,7 +1285,7 @@ header h1 {
 }
 
 .entry-card {
-  background: var(--card);
+  background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px;
@@ -1264,7 +1299,7 @@ header h1 {
 }
 
 .hive-badge {
-  background: var(--honey);
+  background-color: var(--honey);
   color: white;
   border: 2px solid transparent;
   border-radius: 999px;
@@ -1329,7 +1364,7 @@ header h1 {
 }
 
 .change-log-day {
-  background: var(--card);
+  background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 14px 16px;
@@ -1522,7 +1557,7 @@ header h1 {
 }
 
 .edit-form-actions button.secondary {
-  background: var(--card);
+  background-color: var(--card);
   border: 1px solid var(--border);
   color: var(--dark);
   border-radius: 8px;
@@ -1557,7 +1592,7 @@ header h1 {
 
 .remove-photo-btn {
   border: 1px solid var(--border);
-  background: var(--card);
+  background-color: var(--card);
   color: var(--dark);
   border-radius: 999px;
   padding: 3px 10px;
@@ -1566,13 +1601,13 @@ header h1 {
 }
 
 .edit-photo-thumb.removed .remove-photo-btn {
-  background: var(--honey);
+  background-color: var(--honey);
   color: white;
   border-color: var(--honey-dark);
 }
 
 .harvest-view {
-  background: var(--card);
+  background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 20px;
@@ -1610,7 +1645,7 @@ header h1 {
 }
 
 .harvest-form button[type="submit"] {
-  background: var(--honey);
+  background-color: var(--honey);
   color: white;
   border: none;
   border-radius: 8px;
@@ -1653,7 +1688,7 @@ header h1 {
 .paywall {
   max-width: 420px;
   margin: 0 auto;
-  background: var(--card);
+  background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 24px 20px;
@@ -1700,7 +1735,7 @@ header h1 {
 }
 
 .paywall button.primary {
-  background: var(--honey);
+  background-color: var(--honey);
   color: white;
   border: none;
   border-radius: 8px;
@@ -1729,7 +1764,9 @@ header h1 {
 .admin-panel-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(58, 42, 26, 0.55);
+  background: rgba(58, 42, 26, 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -1739,7 +1776,7 @@ header h1 {
 }
 
 .admin-panel {
-  background: var(--card);
+  background-color: var(--card);
   border-radius: 12px;
   padding: 20px;
   width: 100%;
@@ -1783,7 +1820,7 @@ header h1 {
 }
 
 .gift-toggle.gifted {
-  background: var(--honey);
+  background-color: var(--honey);
   color: white;
   border-color: var(--honey-dark);
 }
@@ -1801,7 +1838,7 @@ header h1 {
   right: calc(10px + env(safe-area-inset-right));
   display: flex;
   gap: 2px;
-  background: var(--card);
+  background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 3px;
@@ -1820,7 +1857,7 @@ header h1 {
 }
 
 .lang-switch button.active {
-  background: var(--honey);
+  background-color: var(--honey);
   color: #fff;
 }
 
@@ -1870,7 +1907,7 @@ header h1 {
 }
 
 .welcome-bullets li {
-  background: var(--card);
+  background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 12px 20px;
@@ -1894,13 +1931,24 @@ header h1 {
   font-size: 1.1rem;
   font-weight: 700;
   color: #fff;
-  background: var(--honey);
+  background-color: var(--honey);
   cursor: pointer;
   box-shadow: 0 10px 24px rgba(245, 166, 35, 0.35);
 }
 
 .welcome-cta:hover {
   background: var(--honey-dark);
+}
+
+.welcome-login-hint {
+  margin: 18px 0 0;
+  font-size: 0.9rem;
+  color: #8a7256;
+}
+
+.welcome-login-link {
+  font-weight: 700;
+  text-decoration: underline;
 }
 
 .welcome-install-link {
@@ -1915,7 +1963,9 @@ header h1 {
 .install-guide-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(20, 14, 4, 0.6);
+  background: rgba(20, 14, 4, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1925,7 +1975,7 @@ header h1 {
 
 .install-guide-panel {
   position: relative;
-  background: var(--card);
+  background-color: var(--card);
   border-radius: 14px;
   padding: 24px;
   width: 100%;
@@ -1972,4 +2022,92 @@ header h1 {
 
 .install-guide-outro {
   margin-bottom: 0;
+}
+
+/* ==========================================================================
+   Liquid Glass
+   ==========================================================================
+   Angelehnt an Apples "Liquid Glass"-Materialdesign (iOS 26): Flaechen wirken
+   wie durchscheinendes, mattiertes Glas ueber dem Inhalt darunter - durch
+   backdrop-filter (blur + saturate) auf teiltransparentem Hintergrund, einen
+   hellen Kantenrand (border) als Glasrand und einen diagonalen "Sheen"
+   (background-image, siehe --glass-sheen in :root) als Lichtreflex oben links.
+   Echte SwiftUI/UIKit-Liquid-Glass-APIs (dynamische, bewegungsreaktive
+   Refraktion) gibt es fuer WebView-Inhalte nicht - das hier ist die naechst-
+   beste, rein CSS-basierte Annaeherung, die in Safari/WKWebView (iOS-App) UND
+   normalen Browsern (Web-App) funktioniert.
+
+   Alle Selektoren unten setzen zuvor schon background-color: var(--card) bzw.
+   var(--honey) (siehe jeweilige Regeln oben im File) - deshalb hier bewusst
+   NUR background-image/backdrop-filter/border/box-shadow, nie das "background"-
+   Shorthand, sonst wuerde die dort gesetzte Farbe ueberschrieben. */
+
+.hive-count-editor,
+.user-picker,
+.user-option.new-user,
+.user-form-actions button.secondary,
+.status-bar,
+.hive-tabs button,
+.harvest-panel,
+.entry-tabs button,
+.color-picker,
+.swatch.clear,
+.entry-form,
+.date-toggle button,
+.entry-card,
+.change-log-day,
+.edit-form-actions button.secondary,
+.remove-photo-btn,
+.harvest-view,
+.paywall,
+.admin-panel,
+.lang-switch,
+.welcome-bullets li,
+.install-guide-panel,
+header {
+  background-image: var(--glass-sheen);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow-soft);
+}
+
+/* Groessere/wichtigere Flaechen (Modals, Formulare) bekommen einen etwas
+   staerkeren Sheen und Schatten, damit sie sich sichtbar vom Rest abheben. */
+.harvest-panel,
+.entry-form,
+.paywall,
+.admin-panel,
+.harvest-view {
+  background-image: var(--glass-sheen-strong);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Honigfarbene Call-to-Action-Flaechen bleiben kraeftig eingefaerbt (Lesbarkeit/
+   Kontrast geht vor), bekommen aber denselben Glanz-Sheen wie die Glas-Flaechen,
+   damit sie sich stimmig ins Gesamtbild einfuegen - kein backdrop-filter hier,
+   da eine deckende Farbflaeche nichts zum "Durchblurren" hat. */
+.user-form-actions button,
+.sync-btn,
+.hive-tabs button.active,
+.entry-tabs button.active,
+.new-entry-toggle,
+.date-toggle button.active,
+.paywall button.primary,
+.lang-switch button.active,
+.welcome-cta {
+  background-image: var(--glass-sheen-strong);
+}
+
+/* .hive-tabs button.unmarked ueberschreibt "background" komplett mit dem
+   Streifenmuster (siehe oben im File) und bekommt dadurch keinen Sheen - das
+   ist gewollt, das Streifenmuster ist bereits die visuelle Kennzeichnung. */
+
+/* Safari/WKWebView ohne backdrop-filter-Unterstuetzung (sehr alte iOS-Versionen):
+   Glas-Flaechen bekommen dann automatisch eine deutlich deckendere Hintergrund-
+   farbe, damit Text/Inhalt trotzdem gut lesbar bleibt. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --card: rgba(255, 255, 255, 0.92);
+  }
 }
