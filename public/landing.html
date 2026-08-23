@@ -1,8 +1,13 @@
+<!DOCTYPE html>
+<html lang="de">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>isybee</title>
 <meta name="description" content="isybee ist dein digitales Bienentagebuch: Stockkontrollen, Ernte und Auswertungen für jedes Volk – für iPhone und im Browser.">
 <link rel="canonical" href="https://iwbees.netlify.app/landing.html">
+<link rel="alternate" hreflang="de" href="https://iwbees.netlify.app/landing.html">
+<link rel="alternate" hreflang="en" href="https://iwbees.netlify.app/landing-en.html">
+<link rel="alternate" hreflang="x-default" href="https://iwbees.netlify.app/landing.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="isybee">
 <meta property="og:url" content="https://iwbees.netlify.app/landing.html">
@@ -185,6 +190,20 @@
   }
   .nav-links a { text-decoration: none; transition: color 0.15s; }
   .nav-links a:hover, .nav-links a:focus-visible { color: var(--honey-deep); }
+  .lang-switch {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--surface-border);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .lang-switch:hover, .lang-switch:focus-visible { color: var(--honey-deep); border-color: var(--honey-deep); }
   .btn {
     display: inline-flex;
     align-items: center;
@@ -557,6 +576,7 @@
       <li><a href="#screenshots">Screenshots</a></li>
       <li><a href="#plattform">Plattform</a></li>
     </ul>
+    <a class="lang-switch" href="/landing-en.html" hreflang="en">EN</a>
     <a class="btn btn-primary btn-nav" href="#plattform">Mehr Infos</a>
   </div>
 </header>
@@ -724,3 +744,5 @@
     </div>
   </div>
 </footer>
+
+</html>
