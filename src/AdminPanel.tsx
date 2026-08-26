@@ -88,6 +88,22 @@ export default function AdminPanel({ adminUser, onClose }: Props) {
     }
   }
 
+  async function deleteUser(target: AdminUserRow) {
+    if (!window.confirm(t.admin.deleteConfirm(target.name))) {
+      return;
+    }
+    setBusyId(target.id);
+    setError("");
+    try {
+      await callAdmin("delete", { targetUserId: target.id });
+      setUsers((prev) => prev.filter((u) => u.id !== target.id));
+    } catch (err: any) {
+      setError(err.message || t.admin.errAction);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   return (
     <div className="admin-panel-overlay">
       <div className="admin-panel">
@@ -132,6 +148,7 @@ export default function AdminPanel({ adminUser, onClose }: Props) {
                   <th>{t.admin.colHives}</th>
                   <th>{t.admin.colSubscription}</th>
                   <th>{t.admin.colTrial}</th>
+                  <th>{t.admin.colActions}</th>
                 </tr>
               </thead>
               <tbody>
@@ -159,6 +176,17 @@ export default function AdminPanel({ adminUser, onClose }: Props) {
                         disabled={busyId === u.id}
                       >
                         {busyId === u.id ? "…" : t.admin.expireTrialBtn}
+                      </button>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="delete-btn"
+                        title={t.admin.deleteTitle}
+                        onClick={() => deleteUser(u)}
+                        disabled={busyId === u.id}
+                      >
+                        {busyId === u.id ? "…" : t.admin.deleteBtn}
                       </button>
                     </td>
                   </tr>

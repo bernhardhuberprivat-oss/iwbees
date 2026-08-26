@@ -164,6 +164,11 @@ const de = {
     expireTrialBtn: "Trial ablaufen lassen",
     expireTrialTitle:
       "Nur für Demo-/Testkonten: Beitrittsdatum um 40 Tage zurücksetzen, damit die Testphase sofort abgelaufen ist.",
+    colActions: "Verwalten",
+    deleteBtn: "Löschen",
+    deleteConfirm: (name: string) =>
+      `Nutzer "${name}" endgültig löschen? Alle Einträge, Fotos und Ertragsdaten dieses Kontos werden unwiderruflich entfernt. Das kann nicht rückgängig gemacht werden.`,
+    deleteTitle: "Nutzerkonto und alle zugehörigen Daten unwiderruflich löschen.",
   },
   userPicker: {
     heading: "Wer bist du?",
@@ -468,6 +473,11 @@ const en: Dict = {
       `Artificially expire the trial for "${name}" (join date will be moved back 40 days)? Only use this for demo/test accounts, e.g. for Apple's app review.`,
     expireTrialBtn: "Expire trial",
     expireTrialTitle: "Demo/test accounts only: moves the join date back 40 days so the trial expires immediately.",
+    colActions: "Manage",
+    deleteBtn: "Delete",
+    deleteConfirm: (name: string) =>
+      `Permanently delete user "${name}"? All entries, photos and harvest data for this account will be removed irreversibly. This cannot be undone.`,
+    deleteTitle: "Permanently delete this user account and all associated data.",
   },
   userPicker: {
     heading: "Who are you?",

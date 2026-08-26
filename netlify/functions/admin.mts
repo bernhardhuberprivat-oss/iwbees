@@ -1,11 +1,16 @@
 import type { Context, Config } from "@netlify/functions";
 import { withCors } from "./_cors.mts";
 import { getDatabase } from "@netlify/database";
+import { getStore } from "@netlify/blobs";
 import { createHash } from "node:crypto";
 import { ensureSubscriptionColumns } from "./_subscriptionSchema.mts";
 
 function hashPin(pin: string) {
   return createHash("sha256").update(pin).digest("hex");
+}
+
+function getPhotoStore() {
+  return getStore("bee-photos");
 }
 
 // Serverseitige Admin-Allowlist - bewusst NICHT im Frontend-Bundle, sondern nur als
@@ -100,6 +105,43 @@ const handler = async (req: Request, context: Context) => {
       isGifted: user.is_gifted,
       webTrialStart: user.web_trial_start,
     });
+  }
+
+  if (action === "delete") {
+    // Löscht ein Nutzerkonto komplett (z. B. nicht mehr benötigte Testaccounts) -
+    // dieselbe Kaskade wie beim Selbstlöschen in users.mts (DELETE), nur admin-
+    // ausgelöst statt mit dem eigenen PIN des Zielkontos.
+    const targetUserId = Number(body.targetUserId);
+    if (!targetUserId) {
+      return new Response("targetUserId ist erforderlich", { status: 400 });
+    }
+
+    // Schutz gegen versehentliches Selbstlöschen des eigenen Admin-Kontos.
+    const [adminRow] = await db.sql`SELECT id FROM users WHERE lower(name) = lower(${adminName})`;
+    if (adminRow && adminRow.id === targetUserId) {
+      return new Response("Das eigene Admin-Konto kann hier nicht gelöscht werden", { status: 400 });
+    }
+
+    const [target] = await db.sql`SELECT id, name FROM users WHERE id = ${targetUserId}`;
+    if (!target) {
+      return new Response("Nutzer nicht gefunden", { status: 404 });
+    }
+
+    // Zugehörige Fotos aus dem Blob-Speicher entfernen, bevor die Einträge gelöscht werden.
+    const userEntries = await db.sql`SELECT photo_keys FROM entries WHERE user_id = ${targetUserId}`;
+    const store = getPhotoStore();
+    const allKeys = userEntries.flatMap((row) => (row.photo_keys as string[]) || []);
+    await Promise.all(allKeys.map((k) => store.delete(k)));
+
+    // Alle abhängigen Daten des Nutzers löschen (keine ON DELETE CASCADE-Regel auf den FKs),
+    // erst danach den Nutzer selbst.
+    await db.sql`DELETE FROM entries WHERE user_id = ${targetUserId}`;
+    await db.sql`DELETE FROM hive_colors WHERE user_id = ${targetUserId}`;
+    await db.sql`DELETE FROM annual_harvest WHERE user_id = ${targetUserId}`;
+    await db.sql`DELETE FROM harvest_entries WHERE user_id = ${targetUserId}`;
+    await db.sql`DELETE FROM users WHERE id = ${targetUserId}`;
+
+    return Response.json({ id: target.id, name: target.name, deleted: true });
   }
 
   if (action === "grant" || action === "revoke") {
