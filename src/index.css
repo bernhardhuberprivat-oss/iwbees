@@ -2159,6 +2159,23 @@ header h1 {
   margin-bottom: 0;
 }
 
+.install-guide-appstore-btn {
+  margin-top: 4px;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  background-color: var(--honey);
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(245, 166, 35, 0.3);
+}
+
+.install-guide-appstore-btn:hover {
+  background-color: var(--honey-dark);
+}
+
 /* Einstiegs-Guide fuer Neueinsteiger:innen (GettingStartedGuide.tsx) - dieselbe
    Optik wie .install-guide-*, aber eigene Klassen (Konvention: ein Overlay/Panel-
    Paar pro Feature). */
