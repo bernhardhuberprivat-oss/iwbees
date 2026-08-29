@@ -627,6 +627,17 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
             >
               {t.gettingStarted.trigger}
             </button>
+            <button
+              type="button"
+              className="header-menu-item"
+              onClick={() => {
+                setShowHeaderMenu(false);
+                handleExportAllPdf();
+              }}
+              disabled={exportingPdf}
+            >
+              {exportingPdf ? t.pdfExport.generating : t.pdfExport.allButtonLabel}
+            </button>
             {!Capacitor.isNativePlatform() && (
               <button
                 type="button"
@@ -859,16 +870,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       )}
 
       <main>
-        {selectedHive === "all" && (
-          <>
-            <p className="muted hint">{t.app.hintPickHive}</p>
-            <div className="hive-actions-bar">
-              <button type="button" className="hive-action-btn" onClick={handleExportAllPdf} disabled={exportingPdf}>
-                {exportingPdf ? t.pdfExport.generating : t.pdfExport.allButtonLabel}
-              </button>
-            </div>
-          </>
-        )}
+        {selectedHive === "all" && <p className="muted hint">{t.app.hintPickHive}</p>}
         <section>
           <div className="section-heading-row">
             <h2>{t.app.dailyEntries}</h2>
