@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, FormEvent } from "react";
 import { Entry, HiveInfo, buildHiveRange, getQueenColorForYear } from "./types";
 import NewEntryForm from "./NewEntryForm";
 import EntryList from "./EntryList";
@@ -8,6 +8,8 @@ import HarvestSummary from "./HarvestSummary";
 import UserPicker from "./UserPicker";
 import Welcome from "./Welcome";
 import InstallGuide from "./InstallGuide";
+import GettingStartedGuide from "./GettingStartedGuide";
+import PhotoTimeline from "./PhotoTimeline";
 import Paywall from "./Paywall";
 import AdminPanel from "./AdminPanel";
 import { Capacitor } from "@capacitor/core";
@@ -33,6 +35,11 @@ import {
   refreshWebSubscriptionStatus,
   openWebBillingPortal,
 } from "./subscription";
+
+// "Verbesserungswünsche" im Kopfzeilen-Menü ist bewusst nur ein einfacher mailto:-Link
+// (statt eines eigenen Formulars mit Backend/E-Mail-Versand-Dienst) - öffnet direkt die
+// Mail-App des Nutzers mit vorausgefülltem Betreff, landet bei Bernhards eigener Adresse.
+const FEEDBACK_MAILTO = `mailto:razorblade13@icloud.com?subject=${encodeURIComponent("isybee Feedback")}`;
 
 function formatDateDE(dateStr: string) {
   const [y, m, d] = dateStr.split("-");
@@ -208,7 +215,7 @@ interface DiaryProps {
 
 function Diary({ user, onSwitchUser }: DiaryProps) {
   const t = useT();
-  const { lang } = useLang();
+  const { lang, setLang } = useLang();
   const [selectedHive, setSelectedHive] = useState<number | "all">("all");
   const [harvestEntries, setHarvestEntries] = useState<HarvestEntry[]>([]);
   const [harvestYearTotal, setHarvestYearTotal] = useState(0);
@@ -230,6 +237,12 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [openingBillingPortal, setOpeningBillingPortal] = useState(false);
   const [showInstallGuide, setShowInstallGuide] = useState(false);
+  const [showGettingStarted, setShowGettingStarted] = useState(false);
+  const [showPhotoTimeline, setShowPhotoTimeline] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const [pdfError, setPdfError] = useState("");
+  const [showHeaderMenu, setShowHeaderMenu] = useState(false);
+  const headerMenuRef = useRef<HTMLDivElement>(null);
 
   async function handleManageWebSubscription() {
     setOpeningBillingPortal(true);
@@ -240,6 +253,52 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
     setOpeningBillingPortal(false);
     if (!result.success && result.message) {
       window.alert(result.message);
+    }
+  }
+
+  // PDF-Export (src/pdfExport.ts) - "diaryEntries" wird weiter unten im Component-Body
+  // deklariert (siehe vor dem return), ist zum Zeitpunkt eines tatsächlichen Klicks aber
+  // längst gesetzt (Closure greift zur Aufrufzeit, nicht zur Definitionszeit).
+  async function handleExportHivePdf() {
+    if (typeof selectedHive !== "number") return;
+    setExportingPdf(true);
+    setPdfError("");
+    try {
+      const { exportHivePdf } = await import("./pdfExport");
+      await exportHivePdf({
+        hiveLabel: selectedInfo?.name?.trim() || t.common.hiveFallback(selectedHive),
+        hiveInfo: selectedInfo,
+        varroaMitesActive,
+        latestWeightKg,
+        entries: diaryEntries,
+        t,
+        lang,
+      });
+    } catch (err) {
+      console.warn("PDF-Export (Stock) fehlgeschlagen:", err);
+      setPdfError(t.pdfExport.errGenerate);
+    } finally {
+      setExportingPdf(false);
+    }
+  }
+
+  async function handleExportAllPdf() {
+    setExportingPdf(true);
+    setPdfError("");
+    try {
+      const { exportAllHivesPdf } = await import("./pdfExport");
+      await exportAllHivesPdf({
+        hiveInfo,
+        entries: diaryEntries,
+        t,
+        lang,
+        hiveFallbackLabel: (n: number) => t.common.hiveFallback(n),
+      });
+    } catch (err) {
+      console.warn("PDF-Export (Gesamt) fehlgeschlagen:", err);
+      setPdfError(t.pdfExport.errGenerate);
+    } finally {
+      setExportingPdf(false);
     }
   }
 
@@ -258,6 +317,26 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       cancelled = true;
     };
   }, [user]);
+
+  // Schließt das Kopfzeilen-Menü (drei Striche oben rechts) bei Klick/Touch außerhalb
+  // des Menüs oder bei Escape - Standardverhalten für ein Dropdown-Menü.
+  useEffect(() => {
+    if (!showHeaderMenu) return;
+    function handlePointerDown(e: PointerEvent) {
+      if (headerMenuRef.current && !headerMenuRef.current.contains(e.target as Node)) {
+        setShowHeaderMenu(false);
+      }
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setShowHeaderMenu(false);
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showHeaderMenu]);
 
   async function handleSaveHiveCount(e: FormEvent) {
     e.preventDefault();
@@ -506,9 +585,105 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       : undefined;
   const latestWeightKg = latestWeightEntry ? Number(latestWeightEntry.weight_kg) : null;
 
+  // Echte Tagebucheinträge ohne die automatischen Stammdaten-Änderungsprotokolle (siehe
+  // logStockChange/STOCK_CHANGE_PREFIX oben) - eine Stelle statt der Filter dreimal separat
+  // in EntryList/PhotoTimeline/PDF-Export zu wiederholen.
+  const diaryEntries = entries.filter((e) => !e.notes?.startsWith(STOCK_CHANGE_PREFIX));
+
   return (
     <div className="app">
-      <LanguageSwitch />
+      <div className="header-menu" ref={headerMenuRef}>
+        <button
+          type="button"
+          className="header-menu-toggle"
+          aria-label={t.app.menuOpenLabel}
+          aria-expanded={showHeaderMenu}
+          onClick={() => setShowHeaderMenu((v) => !v)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+        {showHeaderMenu && (
+          <div className="header-menu-panel" role="menu">
+            <div className="header-menu-section">
+              <span className="header-menu-section-label">{t.app.menuLanguageLabel}</span>
+              <div className="lang-switch" role="group" aria-label={t.common.langSwitchLabel}>
+                <button type="button" className={lang === "de" ? "active" : ""} onClick={() => setLang("de")}>
+                  DE
+                </button>
+                <button type="button" className={lang === "en" ? "active" : ""} onClick={() => setLang("en")}>
+                  EN
+                </button>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="header-menu-item"
+              onClick={() => {
+                setShowHeaderMenu(false);
+                setShowGettingStarted(true);
+              }}
+            >
+              {t.gettingStarted.trigger}
+            </button>
+            {!Capacitor.isNativePlatform() && (
+              <button
+                type="button"
+                className="header-menu-item"
+                onClick={() => {
+                  setShowHeaderMenu(false);
+                  setShowInstallGuide(true);
+                }}
+              >
+                {t.installGuide.trigger}
+              </button>
+            )}
+            <a
+              className="header-menu-item"
+              href={FEEDBACK_MAILTO}
+              onClick={() => setShowHeaderMenu(false)}
+            >
+              {t.feedback.menuLabel}
+            </a>
+            {isAdminUser(user) && (
+              <button
+                type="button"
+                className="header-menu-item"
+                onClick={() => {
+                  setShowHeaderMenu(false);
+                  setShowAdminPanel(true);
+                }}
+              >
+                {t.app.manageUsers}
+              </button>
+            )}
+            {!Capacitor.isNativePlatform() && user.webSubscriptionActive && !user.isGifted && (
+              <button
+                type="button"
+                className="header-menu-item"
+                onClick={() => {
+                  setShowHeaderMenu(false);
+                  handleManageWebSubscription();
+                }}
+                disabled={openingBillingPortal}
+              >
+                {openingBillingPortal ? t.common.moment : t.app.manageSubscription}
+              </button>
+            )}
+            <button
+              type="button"
+              className="header-menu-item"
+              onClick={() => {
+                setShowHeaderMenu(false);
+                onSwitchUser();
+              }}
+            >
+              {t.app.switchUser}
+            </button>
+          </div>
+        )}
+      </div>
       <header>
         <h1>{t.app.title}</h1>
         <p className="subtitle">{t.app.subtitleDiary(hiveCount)}</p>
@@ -556,19 +731,6 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
             {t.app.totalUsers(totalUserCount)}
           </span>
         )}
-        {isAdminUser(user) && (
-          <button className="link-btn" onClick={() => setShowAdminPanel(true)}>
-            {t.app.manageUsers}
-          </button>
-        )}
-        {!Capacitor.isNativePlatform() && user.webSubscriptionActive && !user.isGifted && (
-          <button className="link-btn" onClick={handleManageWebSubscription} disabled={openingBillingPortal}>
-            {openingBillingPortal ? t.common.moment : t.app.manageSubscription}
-          </button>
-        )}
-        <button className="link-btn" onClick={onSwitchUser}>
-          {t.app.switchUser}
-        </button>
       </div>
 
       {showAdminPanel && <AdminPanel adminUser={user} onClose={() => setShowAdminPanel(false)} />}
@@ -675,8 +837,38 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
         />
       )}
 
+      {typeof selectedHive === "number" && (
+        <div className="hive-actions-bar">
+          <button type="button" className="hive-action-btn" onClick={() => setShowPhotoTimeline(true)}>
+            {t.photoTimeline.buttonLabel}
+          </button>
+          <button type="button" className="hive-action-btn" onClick={handleExportHivePdf} disabled={exportingPdf}>
+            {exportingPdf ? t.pdfExport.generating : t.pdfExport.hiveButtonLabel}
+          </button>
+        </div>
+      )}
+
+      {pdfError && <p className="error hive-actions-error">{pdfError}</p>}
+
+      {showPhotoTimeline && typeof selectedHive === "number" && (
+        <PhotoTimeline
+          hiveLabel={selectedInfo?.name?.trim() || t.common.hiveFallback(selectedHive)}
+          entries={diaryEntries.filter((e) => e.hive === selectedHive)}
+          onClose={() => setShowPhotoTimeline(false)}
+        />
+      )}
+
       <main>
-        {selectedHive === "all" && <p className="muted hint">{t.app.hintPickHive}</p>}
+        {selectedHive === "all" && (
+          <>
+            <p className="muted hint">{t.app.hintPickHive}</p>
+            <div className="hive-actions-bar">
+              <button type="button" className="hive-action-btn" onClick={handleExportAllPdf} disabled={exportingPdf}>
+                {exportingPdf ? t.pdfExport.generating : t.pdfExport.allButtonLabel}
+              </button>
+            </div>
+          </>
+        )}
         <section>
           <div className="section-heading-row">
             <h2>{t.app.dailyEntries}</h2>
@@ -719,7 +911,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
           )}
 
           <EntryList
-            entries={entries.filter((e) => !e.notes?.startsWith(STOCK_CHANGE_PREFIX))}
+            entries={diaryEntries}
             loading={loading}
             userId={user.id}
             onDelete={handleDelete}
@@ -730,14 +922,6 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       </main>
 
       <footer className="app-legal-footer">
-        {!Capacitor.isNativePlatform() && (
-          <>
-            <button type="button" className="link-btn" onClick={() => setShowInstallGuide(true)}>
-              {t.installGuide.trigger}
-            </button>
-            <span aria-hidden="true">·</span>
-          </>
-        )}
         <button type="button" className="link-btn" onClick={() => openLegalLink(EULA_URL)}>
           {t.app.eula}
         </button>
@@ -748,6 +932,8 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       </footer>
 
       {showInstallGuide && <InstallGuide onClose={() => setShowInstallGuide(false)} />}
+
+      {showGettingStarted && <GettingStartedGuide onClose={() => setShowGettingStarted(false)} />}
     </div>
   );
 }

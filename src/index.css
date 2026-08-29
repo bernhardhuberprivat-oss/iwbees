@@ -419,6 +419,45 @@ header h1 {
   margin: 0 0 20px;
 }
 
+/* Aktionsleiste fuer den gerade ausgewaehlten Stock (Foto-Zeitstrahl, PDF-Export) bzw.
+   fuer den "Alle"-Reiter (Gesamtbericht) - siehe PhotoTimeline.tsx/pdfExport.ts. */
+.hive-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 20px;
+}
+
+.hive-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #6b5a42;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.hive-action-btn:hover {
+  background-color: #fdf0d5;
+}
+
+.hive-action-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.hive-actions-error {
+  text-align: center;
+  margin: -12px 0 20px;
+}
+
 .harvest-open-btn {
   border: 2px solid var(--honey-dark);
   border-radius: 10px 10px 18px 18px;
@@ -1861,6 +1900,102 @@ header h1 {
   color: #fff;
 }
 
+/* Kopfzeilen-Menue (drei Striche oben rechts, Diary-Ansicht) - loest die
+   frueher hier fest positionierte LanguageSwitch ab; Sprachumschalter ist
+   jetzt einer der Menuepunkte darin, siehe App.tsx (Diary-Komponente). */
+.header-menu {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top));
+  right: calc(10px + env(safe-area-inset-right));
+  z-index: 10;
+}
+
+.header-menu-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background-color: var(--card);
+  cursor: pointer;
+  padding: 0;
+}
+
+.header-menu-toggle span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background-color: var(--honey-dark);
+}
+
+.header-menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.header-menu-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 6px 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.header-menu-section-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #8a7256;
+}
+
+/* Innerhalb des Menues wird .lang-switch inline statt fest positioniert
+   gebraucht - die globale .lang-switch-Regel weiter oben (position: absolute,
+   fuer den frueheren Alleinstand oben rechts) wird hier bewusst zurueckgesetzt. */
+.header-menu-section .lang-switch {
+  position: static;
+}
+
+.header-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 8px 6px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--dark);
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.header-menu-item:hover {
+  background-color: rgba(232, 163, 61, 0.15);
+}
+
+.header-menu-item:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 /* Willkommens-/Onboarding-Bildschirm (Welcome.tsx) - nur beim allerersten Öffnen der
    App zu sehen, bevor ein Konto existiert. .welcome-screen ergänzt die .app-Klasse
    (max-width/Padding/Safe-Area sind davon schon abgedeckt). */
@@ -2024,6 +2159,113 @@ header h1 {
   margin-bottom: 0;
 }
 
+/* Einstiegs-Guide fuer Neueinsteiger:innen (GettingStartedGuide.tsx) - dieselbe
+   Optik wie .install-guide-*, aber eigene Klassen (Konvention: ein Overlay/Panel-
+   Paar pro Feature). */
+.getting-started-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 14, 4, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.getting-started-panel {
+  position: relative;
+  background-color: var(--card);
+  border-radius: 14px;
+  padding: 24px;
+  width: 100%;
+  max-width: 440px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  text-align: left;
+}
+
+.getting-started-intro {
+  margin-top: 0;
+}
+
+.getting-started-step {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.getting-started-step:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.getting-started-step h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.getting-started-step p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: #5a4632;
+}
+
+.getting-started-outro {
+  margin-top: 20px;
+  margin-bottom: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-weight: 600;
+}
+
+/* Foto-Zeitstrahl (PhotoTimeline.tsx) - selbe Optik wie .harvest-panel/.admin-panel,
+   eigene Klassen (Konvention: ein Overlay/Panel-Paar pro Feature). Die eigentlichen
+   Foto-Thumbnails nutzen bewusst die schon vorhandenen .entry-photos/.entry-photo-thumb
+   Klassen (EntryList.tsx) statt eigener Regeln - identisches Fotoraster, kein Grund fuer
+   Duplikate. */
+.photo-timeline-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 14, 4, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 100;
+  padding: 40px 16px;
+}
+
+.photo-timeline-panel {
+  position: relative;
+  background-color: var(--card);
+  border-radius: 14px;
+  padding: 24px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  text-align: left;
+}
+
+.photo-timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.photo-timeline-date {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #6b5a42;
+  margin-bottom: 6px;
+}
+
 /* ==========================================================================
    Liquid Glass
    ==========================================================================
@@ -2062,8 +2304,13 @@ header h1 {
 .paywall,
 .admin-panel,
 .lang-switch,
+.header-menu-toggle,
+.header-menu-panel,
 .welcome-bullets li,
 .install-guide-panel,
+.getting-started-panel,
+.photo-timeline-panel,
+.hive-action-btn,
 header {
   background-image: var(--glass-sheen);
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
@@ -2078,6 +2325,7 @@ header {
 .entry-form,
 .paywall,
 .admin-panel,
+.photo-timeline-panel,
 .harvest-view {
   background-image: var(--glass-sheen-strong);
   box-shadow: var(--glass-shadow);

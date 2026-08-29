@@ -76,6 +76,8 @@ const de = {
     manageUsers: "Nutzer verwalten",
     manageSubscription: "Abo verwalten",
     switchUser: "Nutzer wechseln",
+    menuOpenLabel: "Menü öffnen",
+    menuLanguageLabel: "Sprache",
     online: "🟢 Online",
     offline: "🔴 Kein Internet",
     pendingInfo: (n: number) => `${n} ${plural(n, "Eintrag wartet", "Einträge warten")} auf Upload`,
@@ -126,6 +128,48 @@ const de = {
     androidStep4: "Mit „Installieren“ bestätigen",
     outro: "Danach startest du isybee wie jede andere App direkt vom Homescreen – inklusive Offline-Nutzung.",
   },
+  gettingStarted: {
+    trigger: "🐝 Wie funktioniert isybee?",
+    heading: "So funktioniert isybee",
+    intro: "Ganz einfach – in drei Schritten bist du startklar:",
+    step1Title: "1. Anzahl deiner Bienenstöcke eingeben",
+    step1Text:
+      "Tippe oben auf „Anzahl Bienenstöcke ändern“ und gib ein, wie viele Stöcke du hast. isybee legt dann automatisch für jeden Stock einen eigenen Reiter an.",
+    step2Title: "2. Jeden Stock benennen und markieren",
+    step2Text:
+      "Tippe auf einen Stock-Reiter, z. B. „Stock 1“. Dort kannst du dem Stock einen Namen und eine Farbe geben, damit du ihn auf einen Blick wiedererkennst.",
+    step3Title: "3. Tagebucheinträge erfassen",
+    step3Text:
+      "Wähle einen Stock aus und tippe auf „Neuer Tageseintrag“. Trage ein, was du bei der Kontrolle beobachtet hast – zum Beispiel Volksstärke, Varroa oder Gewicht.",
+    outro: "Das war's schon! So sammelst du über die Saison einen Überblick über jeden einzelnen Stock.",
+  },
+  photoTimeline: {
+    buttonLabel: "📷 Foto-Zeitstrahl",
+    heading: (label: string) => `📷 Foto-Zeitstrahl – ${label}`,
+    empty: "Für diesen Stock gibt es noch keine Fotos.",
+  },
+  pdfExport: {
+    hiveButtonLabel: "📄 Diesen Stock exportieren",
+    allButtonLabel: "📄 Gesamtbericht exportieren",
+    generating: "Erstelle PDF…",
+    errGenerate: "PDF konnte nicht erstellt werden. Bitte erneut versuchen.",
+    reportTitleHive: (label: string) => `isybee – Stockbericht: ${label}`,
+    reportTitleAll: "isybee – Gesamtbericht",
+    generatedOn: (date: string) => `Erstellt am ${date}`,
+    noEntries: "Für diesen Stock liegen noch keine Tagebucheinträge vor.",
+    category: "Kategorie",
+    queenYear: "Königin – Zuchtjahr",
+    colonyStrength: "Volksstärke",
+    currentWeight: "Aktuelles Stockgewicht",
+    varroaActive: "Varroamilben zuletzt gemeldet",
+    colDate: "Datum",
+    colStrength: "Volksstärke",
+    colVarroa: "Varroa",
+    colFeeding: "Fütterung",
+    colWeight: "Gewicht (kg)",
+    colSightings: "Sichtungen",
+    colNotes: "Notizen",
+  },
   paywall: {
     subtitle: "Deine kostenlose Testphase ist abgelaufen",
     intro: (name: string) => (
@@ -169,6 +213,11 @@ const de = {
     deleteConfirm: (name: string) =>
       `Nutzer "${name}" endgültig löschen? Alle Einträge, Fotos und Ertragsdaten dieses Kontos werden unwiderruflich entfernt. Das kann nicht rückgängig gemacht werden.`,
     deleteTitle: "Nutzerkonto und alle zugehörigen Daten unwiderruflich löschen.",
+  },
+  feedback: {
+    // Oeffnet nur einen mailto:-Link (siehe FEEDBACK_MAILTO in App.tsx), kein eigenes
+    // Formular mehr - daher hier bewusst nur noch das Label fuer den Menuepunkt.
+    menuLabel: "Verbesserungswünsche",
   },
   userPicker: {
     heading: "Wer bist du?",
@@ -388,6 +437,8 @@ const en: Dict = {
     manageUsers: "Manage users",
     manageSubscription: "Manage subscription",
     switchUser: "Switch user",
+    menuOpenLabel: "Open menu",
+    menuLanguageLabel: "Language",
     online: "🟢 Online",
     offline: "🔴 No internet",
     pendingInfo: (n: number) => `${n} ${plural(n, "entry", "entries")} waiting to upload`,
@@ -436,6 +487,48 @@ const en: Dict = {
     androidStep4: "Confirm with “Install”",
     outro: "After that, isybee opens straight from your home screen like any other app – including offline use.",
   },
+  gettingStarted: {
+    trigger: "🐝 How does isybee work?",
+    heading: "How isybee works",
+    intro: "Simple – you'll be ready to go in three steps:",
+    step1Title: "1. Enter how many beehives you have",
+    step1Text:
+      'Tap "Change number of hives" at the top and enter how many hives you have. isybee then automatically creates a tab for each hive.',
+    step2Title: "2. Name and mark each hive",
+    step2Text:
+      'Tap a hive tab, e.g. "Hive 1". There you can give the hive a name and a color, so you can recognize it at a glance.',
+    step3Title: "3. Log diary entries",
+    step3Text:
+      'Select a hive and tap "New entry". Record what you observed during your check – for example colony strength, varroa mites, or weight.',
+    outro: "That's it! Over the season this gives you a clear overview of every single hive.",
+  },
+  photoTimeline: {
+    buttonLabel: "📷 Photo timeline",
+    heading: (label: string) => `📷 Photo timeline – ${label}`,
+    empty: "There are no photos for this hive yet.",
+  },
+  pdfExport: {
+    hiveButtonLabel: "📄 Export this hive",
+    allButtonLabel: "📄 Export full report",
+    generating: "Creating PDF…",
+    errGenerate: "Could not create the PDF. Please try again.",
+    reportTitleHive: (label: string) => `isybee – Hive report: ${label}`,
+    reportTitleAll: "isybee – Full report",
+    generatedOn: (date: string) => `Created on ${date}`,
+    noEntries: "There are no diary entries for this hive yet.",
+    category: "Category",
+    queenYear: "Queen – year",
+    colonyStrength: "Colony strength",
+    currentWeight: "Current hive weight",
+    varroaActive: "Varroa mites last reported",
+    colDate: "Date",
+    colStrength: "Strength",
+    colVarroa: "Varroa",
+    colFeeding: "Feeding",
+    colWeight: "Weight (kg)",
+    colSightings: "Sightings",
+    colNotes: "Notes",
+  },
   paywall: {
     subtitle: "Your free trial has ended",
     intro: (name: string) => (
@@ -478,6 +571,9 @@ const en: Dict = {
     deleteConfirm: (name: string) =>
       `Permanently delete user "${name}"? All entries, photos and harvest data for this account will be removed irreversibly. This cannot be undone.`,
     deleteTitle: "Permanently delete this user account and all associated data.",
+  },
+  feedback: {
+    menuLabel: "Feature requests",
   },
   userPicker: {
     heading: "Who are you?",
