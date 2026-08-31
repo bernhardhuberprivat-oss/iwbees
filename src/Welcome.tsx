@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import { useT } from "./i18n";
 import InstallGuide from "./InstallGuide";
 
@@ -46,9 +47,11 @@ export default function Welcome({ onGetStarted, onLogin }: Props) {
         </button>
       </p>
 
-      <button type="button" className="link-btn welcome-install-link" onClick={() => setShowInstallGuide(true)}>
-        {t.installGuide.trigger}
-      </button>
+      {!Capacitor.isNativePlatform() && (
+        <button type="button" className="link-btn welcome-install-link" onClick={() => setShowInstallGuide(true)}>
+          {t.installGuide.trigger}
+        </button>
+      )}
 
       {showInstallGuide && <InstallGuide onClose={() => setShowInstallGuide(false)} />}
     </div>
