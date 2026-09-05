@@ -1869,6 +1869,29 @@ header h1 {
   cursor: default;
 }
 
+/* Aktivitaets-Badge in der Admin-Nutzerliste - zeigt auf einen Blick, ob ein Nutzer
+   die App nach der Registrierung wirklich benutzt hat (>=1 Tagebucheintrag) oder nur
+   installiert/registriert und nie einen Eintrag erfasst hat. Nur fuer den Entwickler
+   im Admin-Panel sichtbar, siehe AdminPanel.tsx. */
+.activity-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.activity-badge.active {
+  background-color: #e6f4ea;
+  color: #2e7d32;
+}
+
+.activity-badge.inactive {
+  background-color: #f0ede6;
+  color: #6b5a42;
+}
+
 /* Sprachumschalter (Deutsch/Englisch) - oben rechts in jedem App-Screen, siehe
    LanguageSwitch in App.tsx / Paywall.tsx. */
 .lang-switch {

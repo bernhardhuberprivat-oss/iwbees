@@ -197,6 +197,9 @@ const de = {
     colName: "Name",
     colSince: "Dabei seit",
     colHives: "Stöcke",
+    colActivity: "Aktivität",
+    activityBadge: (count: number) =>
+      count === 0 ? "Nur installiert" : `Aktiv · ${count} ${count === 1 ? "Eintrag" : "Einträge"}`,
     colSubscription: "Abo",
     colTrial: "Test",
     giftRevoke: "🎁 Geschenkt – entziehen",
@@ -554,6 +557,9 @@ const en: Dict = {
     colName: "Name",
     colSince: "Joined",
     colHives: "Hives",
+    colActivity: "Activity",
+    activityBadge: (count: number) =>
+      count === 0 ? "Installed only" : `Active · ${count} ${count === 1 ? "entry" : "entries"}`,
     colSubscription: "Subscription",
     colTrial: "Trial",
     giftRevoke: "🎁 Gifted – revoke",

@@ -14,6 +14,7 @@ interface AdminUserRow {
   hiveCount: number;
   createdAt: string;
   isGifted: boolean;
+  entryCount: number;
 }
 
 export default function AdminPanel({ adminUser, onClose }: Props) {
@@ -146,6 +147,7 @@ export default function AdminPanel({ adminUser, onClose }: Props) {
                   <th>{t.admin.colName}</th>
                   <th>{t.admin.colSince}</th>
                   <th>{t.admin.colHives}</th>
+                  <th>{t.admin.colActivity}</th>
                   <th>{t.admin.colSubscription}</th>
                   <th>{t.admin.colTrial}</th>
                   <th>{t.admin.colActions}</th>
@@ -157,6 +159,11 @@ export default function AdminPanel({ adminUser, onClose }: Props) {
                     <td>{u.name}</td>
                     <td>{formatDate(u.createdAt)}</td>
                     <td>{u.hiveCount}</td>
+                    <td>
+                      <span className={u.entryCount === 0 ? "activity-badge inactive" : "activity-badge active"}>
+                        {t.admin.activityBadge(u.entryCount)}
+                      </span>
+                    </td>
                     <td>
                       <button
                         type="button"

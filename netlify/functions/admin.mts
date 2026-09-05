@@ -54,10 +54,18 @@ const handler = async (req: Request, context: Context) => {
   }
 
   if (action === "list") {
+    // entryCount ist nur fuer die Admin-Ansicht gedacht (Entwickler-Konto) - zeigt auf
+    // einen Blick, ob ein Nutzer die App nach dem Anlegen des Kontos wirklich benutzt
+    // (mind. 1 Tagebucheintrag) oder nur heruntergeladen/registriert und nie einen
+    // Eintrag erfasst hat. Bewusst ueber eine Subquery auf entries statt eines
+    // zusaetzlichen Zaehler-Felds auf der users-Tabelle, da entries schon die
+    // verlaessliche Quelle der Wahrheit fuer echte Nutzung ist.
     const users = await db.sql`
-      SELECT id, name, hive_count, created_at, is_gifted
-      FROM users
-      ORDER BY name
+      SELECT
+        u.id, u.name, u.hive_count, u.created_at, u.is_gifted,
+        (SELECT COUNT(*) FROM entries e WHERE e.user_id = u.id) AS entry_count
+      FROM users u
+      ORDER BY u.name
     `;
     return Response.json(
       users.map((u) => ({
@@ -66,6 +74,7 @@ const handler = async (req: Request, context: Context) => {
         hiveCount: u.hive_count,
         createdAt: u.created_at,
         isGifted: u.is_gifted,
+        entryCount: Number(u.entry_count),
       }))
     );
   }
