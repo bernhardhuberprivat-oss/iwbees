@@ -1,5 +1,5 @@
 {
-  "originHash" : "fb06949bd54d6a0cf1ffbe1d7c0a3b8da003d9457927c8271149acc8d1418b00",
+  "originHash" : "57a0decf30e126a657abf87c64843a038523fbe1e66b140c19ec3d6b51777c5f",
   "pins" : [
     {
       "identity" : "capacitor-swift-pm",
@@ -17,6 +17,15 @@
       "state" : {
         "revision" : "9068b2cc9584bfa118c185b8032bbebb3a4a2174",
         "version" : "1.0.5"
+      }
+    },
+    {
+      "identity" : "ion-ios-filesystem",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ionic-team/ion-ios-filesystem.git",
+      "state" : {
+        "revision" : "0d81e26e828ff9582807e2339112cedf2e0fab85",
+        "version" : "1.1.2"
       }
     },
     {

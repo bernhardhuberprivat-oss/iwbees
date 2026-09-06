@@ -10,6 +10,7 @@ import Welcome from "./Welcome";
 import InstallGuide from "./InstallGuide";
 import GettingStartedGuide from "./GettingStartedGuide";
 import PhotoTimeline from "./PhotoTimeline";
+import VoiceNotes from "./VoiceNotes";
 import Paywall from "./Paywall";
 import AdminPanel from "./AdminPanel";
 import { Capacitor } from "@capacitor/core";
@@ -239,6 +240,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   const [showInstallGuide, setShowInstallGuide] = useState(false);
   const [showGettingStarted, setShowGettingStarted] = useState(false);
   const [showPhotoTimeline, setShowPhotoTimeline] = useState(false);
+  const [showVoiceNotes, setShowVoiceNotes] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
   const [pdfError, setPdfError] = useState("");
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
@@ -638,6 +640,16 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
             >
               {exportingPdf ? t.pdfExport.generating : t.pdfExport.allButtonLabel}
             </button>
+            <button
+              type="button"
+              className="header-menu-item"
+              onClick={() => {
+                setShowHeaderMenu(false);
+                setShowVoiceNotes(true);
+              }}
+            >
+              {t.voiceNotes.menuLabel}
+            </button>
             {!Capacitor.isNativePlatform() && (
               <button
                 type="button"
@@ -745,6 +757,15 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       </div>
 
       {showAdminPanel && <AdminPanel adminUser={user} onClose={() => setShowAdminPanel(false)} />}
+
+      {showVoiceNotes && (
+        <VoiceNotes
+          user={user}
+          hiveCount={hiveCount}
+          hiveInfo={hiveInfo}
+          onClose={() => setShowVoiceNotes(false)}
+        />
+      )}
 
       <div className={`status-bar ${isOnline ? "online" : "offline"}`}>
         <span>{isOnline ? t.app.online : t.app.offline}</span>

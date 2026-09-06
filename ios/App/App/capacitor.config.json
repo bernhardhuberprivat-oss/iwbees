@@ -5,6 +5,8 @@
 	"packageClassList": [
 		"CAPBrowserPlugin",
 		"CAPCameraPlugin",
+		"FilesystemPlugin",
+		"SharePlugin",
 		"PurchasesPlugin"
 	]
 }

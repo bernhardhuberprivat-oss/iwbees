@@ -2306,6 +2306,130 @@ header h1 {
   margin-bottom: 6px;
 }
 
+/* Sprachnotizen (VoiceNotes.tsx) - selbes Overlay/Panel-Muster wie Foto-Zeitstrahl/
+   Admin/Ernte, eigene Klassen fuer Recorder-Button, Vorschau vor dem Speichern und die
+   Liste bereits gespeicherter Notizen. */
+.voice-notes-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 14, 4, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 100;
+  padding: 40px 16px;
+}
+
+.voice-notes-panel {
+  position: relative;
+  background-color: var(--card);
+  border-radius: 14px;
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  text-align: left;
+}
+
+.voice-note-recorder {
+  margin-bottom: 18px;
+}
+
+.voice-record-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background-color: var(--honey);
+  cursor: pointer;
+}
+
+.voice-record-btn.recording {
+  background-color: #e74c3c;
+  color: #fff;
+  border-color: #e74c3c;
+}
+
+.voice-note-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.voice-note-preview audio,
+.voice-note-item audio {
+  width: 100%;
+}
+
+.voice-note-hive-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b5a42;
+}
+
+.voice-note-hive-label select {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.voice-note-preview-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.voice-note-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.voice-note-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.voice-note-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.voice-note-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.voice-note-item-date {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #6b5a42;
+}
+
 /* ==========================================================================
    Liquid Glass
    ==========================================================================
@@ -2350,6 +2474,8 @@ header h1 {
 .install-guide-panel,
 .getting-started-panel,
 .photo-timeline-panel,
+.voice-notes-panel,
+.voice-record-btn,
 .hive-action-btn,
 header {
   background-image: var(--glass-sheen);
@@ -2366,6 +2492,7 @@ header {
 .paywall,
 .admin-panel,
 .photo-timeline-panel,
+.voice-notes-panel,
 .harvest-view {
   background-image: var(--glass-sheen-strong);
   box-shadow: var(--glass-shadow);
