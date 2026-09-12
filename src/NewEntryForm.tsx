@@ -6,6 +6,7 @@ import { readableTextColor } from "./colorUtils";
 import { getQueenColorForYear } from "./types";
 import { apiUrl } from "./apiBase";
 import { useT, useLang, dateLocale } from "./i18n";
+import VoiceNoteRecordButton from "./VoiceNoteRecordButton";
 
 interface Props {
   userId: number;
@@ -14,6 +15,7 @@ interface Props {
   hiveName?: string;
   queenYear: number | null;
   colonyStrength: string | null;
+  voiceNotesEnabled?: boolean;
   onCreated: () => void;
   onClose?: () => void;
 }
@@ -27,6 +29,7 @@ export default function NewEntryForm({
   hiveName,
   queenYear,
   colonyStrength,
+  voiceNotesEnabled,
   onCreated,
   onClose,
 }: Props) {
@@ -320,6 +323,12 @@ export default function NewEntryForm({
           onChange={(e) => setPhotos(e.target.files)}
         />
       </label>
+
+      {voiceNotesEnabled && (
+        <div className="full-width">
+          <VoiceNoteRecordButton userId={userId} hive={hive} />
+        </div>
+      )}
 
       {error && <p className="error">{error}</p>}
       {info && <p className="info">{info}</p>}

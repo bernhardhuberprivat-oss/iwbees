@@ -10,7 +10,7 @@ import Welcome from "./Welcome";
 import InstallGuide from "./InstallGuide";
 import GettingStartedGuide from "./GettingStartedGuide";
 import PhotoTimeline from "./PhotoTimeline";
-import VoiceNotes from "./VoiceNotes";
+import VoiceNoteReview from "./VoiceNoteReview";
 import Paywall from "./Paywall";
 import AdminPanel from "./AdminPanel";
 import { Capacitor } from "@capacitor/core";
@@ -22,6 +22,7 @@ import {
   hasSeenWelcome,
   markWelcomeSeen,
 } from "./userSession";
+import { isVoiceNotesEnabled, setVoiceNotesEnabled } from "./voiceNotesPref";
 import { cacheGet, cacheSet, getPendingEntries, deletePendingEntry, pendingToDisplayEntry, syncPendingEntries } from "./offline";
 import { readableTextColor, hiveRingColor } from "./colorUtils";
 import { apiUrl } from "./apiBase";
@@ -240,7 +241,8 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   const [showInstallGuide, setShowInstallGuide] = useState(false);
   const [showGettingStarted, setShowGettingStarted] = useState(false);
   const [showPhotoTimeline, setShowPhotoTimeline] = useState(false);
-  const [showVoiceNotes, setShowVoiceNotes] = useState(false);
+  const [voiceNotesEnabled, setVoiceNotesEnabledState] = useState(() => isVoiceNotesEnabled());
+  const [showVoiceNoteReview, setShowVoiceNoteReview] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
   const [pdfError, setPdfError] = useState("");
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
@@ -619,6 +621,22 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
                 </button>
               </div>
             </div>
+            <div className="header-menu-section">
+              <span className="header-menu-section-label">{t.voiceNotes.toggleLabel}</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={voiceNotesEnabled}
+                className={`voice-notes-switch ${voiceNotesEnabled ? "on" : ""}`}
+                onClick={() => {
+                  const next = !voiceNotesEnabled;
+                  setVoiceNotesEnabledState(next);
+                  setVoiceNotesEnabled(next);
+                }}
+              >
+                <span className="voice-notes-switch-knob" />
+              </button>
+            </div>
             <button
               type="button"
               className="header-menu-item"
@@ -639,16 +657,6 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
               disabled={exportingPdf}
             >
               {exportingPdf ? t.pdfExport.generating : t.pdfExport.allButtonLabel}
-            </button>
-            <button
-              type="button"
-              className="header-menu-item"
-              onClick={() => {
-                setShowHeaderMenu(false);
-                setShowVoiceNotes(true);
-              }}
-            >
-              {t.voiceNotes.menuLabel}
             </button>
             {!Capacitor.isNativePlatform() && (
               <button
@@ -758,15 +766,6 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
 
       {showAdminPanel && <AdminPanel adminUser={user} onClose={() => setShowAdminPanel(false)} />}
 
-      {showVoiceNotes && (
-        <VoiceNotes
-          user={user}
-          hiveCount={hiveCount}
-          hiveInfo={hiveInfo}
-          onClose={() => setShowVoiceNotes(false)}
-        />
-      )}
-
       <div className={`status-bar ${isOnline ? "online" : "offline"}`}>
         <span>{isOnline ? t.app.online : t.app.offline}</span>
         {pendingCount > 0 && (
@@ -874,6 +873,11 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
           <button type="button" className="hive-action-btn" onClick={() => setShowPhotoTimeline(true)}>
             {t.photoTimeline.buttonLabel}
           </button>
+          {voiceNotesEnabled && (
+            <button type="button" className="hive-action-btn" onClick={() => setShowVoiceNoteReview(true)}>
+              {t.voiceNotes.reviewButtonLabel}
+            </button>
+          )}
           <button type="button" className="hive-action-btn" onClick={handleExportHivePdf} disabled={exportingPdf}>
             {exportingPdf ? t.pdfExport.generating : t.pdfExport.hiveButtonLabel}
           </button>
@@ -887,6 +891,15 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
           hiveLabel={selectedInfo?.name?.trim() || t.common.hiveFallback(selectedHive)}
           entries={diaryEntries.filter((e) => e.hive === selectedHive)}
           onClose={() => setShowPhotoTimeline(false)}
+        />
+      )}
+
+      {showVoiceNoteReview && typeof selectedHive === "number" && (
+        <VoiceNoteReview
+          user={user}
+          hive={selectedHive}
+          hiveLabel={selectedInfo?.name?.trim() || t.common.hiveFallback(selectedHive)}
+          onClose={() => setShowVoiceNoteReview(false)}
         />
       )}
 
@@ -924,6 +937,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
               hiveName={selectedInfo?.name ?? undefined}
               queenYear={selectedInfo?.queenYear ?? null}
               colonyStrength={selectedInfo?.colonyStrength ?? null}
+              voiceNotesEnabled={voiceNotesEnabled}
               onCreated={() => {
                 loadEntries();
                 // Fenster erst schließen, wenn die Biene fertig davongeflogen ist.

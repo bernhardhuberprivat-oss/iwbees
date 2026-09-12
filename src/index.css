@@ -1994,6 +1994,42 @@ header h1 {
   position: static;
 }
 
+/* Ein/Aus-Schalter fuer das Sprachnotizen-Feature (Kopfmenue, siehe App.tsx/
+   voiceNotesPref.ts) - simpler Pill-Schalter mit gleitendem Knopf, analog zu einem
+   klassischen iOS-Switch, damit der Zustand auf einen Blick klar ist. */
+.voice-notes-switch {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background-color: rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.voice-notes-switch.on {
+  background-color: var(--honey);
+  border-color: var(--honey);
+}
+
+.voice-notes-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease;
+}
+
+.voice-notes-switch.on .voice-notes-switch-knob {
+  transform: translateX(18px);
+}
+
 .header-menu-item {
   display: block;
   width: 100%;
@@ -2308,7 +2344,13 @@ header h1 {
 
 /* Sprachnotizen (VoiceNotes.tsx) - selbes Overlay/Panel-Muster wie Foto-Zeitstrahl/
    Admin/Ernte, eigene Klassen fuer Recorder-Button, Vorschau vor dem Speichern und die
-   Liste bereits gespeicherter Notizen. */
+   Liste bereits gespeicherter Notizen.
+
+   Seit 12 Sep 2026 aufgeteilt: der Recorder (.voice-record-btn/.voice-note-preview,
+   Klasse "large" fuer die groessere Variante im Tageseintrag-Formular) sitzt in
+   VoiceNoteRecordButton.tsx, das reine Wiedergabe-/Verwaltungs-Panel (.voice-notes-
+   overlay/.voice-notes-panel/.voice-note-list) in VoiceNoteReview.tsx - beide teilen
+   sich weiterhin diese Klassen. */
 .voice-notes-overlay {
   position: fixed;
   inset: 0;
@@ -2360,6 +2402,31 @@ header h1 {
   border-color: #e74c3c;
 }
 
+/* Groessere Variante fuer das Tageseintrag-Formular (NewEntryForm.tsx) - deutlich
+   praesenter als der Standard-Button, wie von Bernhard gewuenscht ("groesseres
+   Mikrofon-Symbol"). */
+.voice-record-btn.large {
+  padding: 16px 18px;
+  font-size: 1.05rem;
+}
+
+.voice-record-btn-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.voice-note-record-inline {
+  margin: 4px 0 10px;
+}
+
+.voice-note-inline-saved {
+  margin-top: 8px;
+}
+
+.voice-note-inline-error {
+  margin-top: 8px;
+}
+
 .voice-note-preview {
   display: flex;
   flex-direction: column;
@@ -2369,23 +2436,6 @@ header h1 {
 .voice-note-preview audio,
 .voice-note-item audio {
   width: 100%;
-}
-
-.voice-note-hive-label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #6b5a42;
-}
-
-.voice-note-hive-label select {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 1rem;
-  font-family: inherit;
 }
 
 .voice-note-preview-actions {
