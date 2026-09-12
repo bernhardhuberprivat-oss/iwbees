@@ -2438,10 +2438,30 @@ header h1 {
   width: 100%;
 }
 
-.voice-note-preview-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+/* Grosser Save-Button nach dem Stopp (siehe VoiceNoteRecordButton.tsx) - eigene
+   gruene Variante des .voice-record-btn, damit er sich vom honigfarbenen
+   Start-Zustand und vom roten Aufnahme-Zustand klar als "naechster Schritt"
+   abhebt (12 Sep 2026, Fix fuer "Speichern-Button war zu klein/unauffaellig"). */
+.voice-record-btn.voice-save-prompt {
+  background-color: #2e7d32;
+  color: #fff;
+  border-color: #2e7d32;
+}
+
+.voice-note-discard-link {
+  align-self: center;
+  background: none;
+  border: none;
+  padding: 4px;
+  font-size: 0.85rem;
+  color: #6b5a42;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.voice-note-discard-link:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .voice-note-list {

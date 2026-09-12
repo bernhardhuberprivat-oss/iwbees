@@ -160,14 +160,25 @@ export default function VoiceNoteRecordButton({ userId, hive }: Props) {
       {pendingBlob && (
         <div className="voice-note-preview">
           <audio controls src={pendingBlob.url} />
-          <div className="voice-note-preview-actions">
-            <button type="button" className="secondary" onClick={discardPending} disabled={saving}>
-              {t.voiceNotes.discardButton}
-            </button>
-            <button type="button" onClick={savePending} disabled={saving}>
-              {saving ? t.voiceNotes.saving : t.voiceNotes.saveButton}
-            </button>
-          </div>
+          {/* Grosser, auffaelliger Button statt der bisherigen kleinen "Speichern"-
+              Schaltflaeche unten - die wurde von Bernhard leicht uebersehen (12 Sep 2026
+              Feedback: Sprachnotiz aufgenommen, aber nie gespeichert, weil der Text zu
+              klein/unauffaellig war). Uebernimmt optisch denselben Stil wie der
+              Aufnahme-Button oben, damit er als naechster Schritt sofort ins Auge faellt. */}
+          <button
+            type="button"
+            className="voice-record-btn large voice-save-prompt"
+            onClick={savePending}
+            disabled={saving}
+          >
+            <span className="voice-record-btn-icon" aria-hidden="true">
+              💾
+            </span>
+            {saving ? t.voiceNotes.saving : t.voiceNotes.saveButton}
+          </button>
+          <button type="button" className="voice-note-discard-link" onClick={discardPending} disabled={saving}>
+            {t.voiceNotes.discardButton}
+          </button>
         </div>
       )}
 
