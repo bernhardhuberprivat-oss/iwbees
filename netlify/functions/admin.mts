@@ -142,8 +142,15 @@ const handler = async (req: Request, context: Context) => {
     const allKeys = userEntries.flatMap((row) => (row.photo_keys as string[]) || []);
     await Promise.all(allKeys.map((k) => store.delete(k)));
 
+    // Sprachnotizen (Audio-Dateien im Blob-Store + DB-Zeilen) ebenfalls entfernen - sonst
+    // scheitert das Löschen des Nutzers an der Fremdschlüssel-Beziehung voice_notes.user_id.
+    const userVoiceNotes = await db.sql`SELECT audio_key FROM voice_notes WHERE user_id = ${targetUserId}`;
+    const voiceStore = getStore("bee-voice-notes");
+    await Promise.all(userVoiceNotes.map((row) => voiceStore.delete(row.audio_key as string)));
+
     // Alle abhängigen Daten des Nutzers löschen (keine ON DELETE CASCADE-Regel auf den FKs),
     // erst danach den Nutzer selbst.
+    await db.sql`DELETE FROM voice_notes WHERE user_id = ${targetUserId}`;
     await db.sql`DELETE FROM entries WHERE user_id = ${targetUserId}`;
     await db.sql`DELETE FROM hive_colors WHERE user_id = ${targetUserId}`;
     await db.sql`DELETE FROM annual_harvest WHERE user_id = ${targetUserId}`;

@@ -107,6 +107,17 @@ export function trialDaysLeft(user: CurrentUser): number {
   return Math.max(0, Math.ceil(TRIAL_DAYS - ageDays));
 }
 
+// RevenueCat nutzt pro Store einen eigenen Public API Key: iOS (appl_...) und Android
+// (goog_...). Beide stehen in .env.native.
+function getRevenueCatApiKey(): string | undefined {
+  const env = import.meta.env;
+  const key =
+    Capacitor.getPlatform() === "android"
+      ? (env.VITE_REVENUECAT_API_KEY_ANDROID as string | undefined)
+      : (env.VITE_REVENUECAT_API_KEY as string | undefined);
+  return key || undefined;
+}
+
 // Prüft per RevenueCat, ob ein aktives Abo (Entitlement "premium") vorliegt.
 // Läuft absichtlich "fail open": Wenn kein API-Key gesetzt ist, RevenueCat nicht
 // initialisiert werden kann oder die Abfrage fehlschlägt (z. B. offline), wird die
@@ -127,7 +138,7 @@ export async function checkSubscription(user: CurrentUser): Promise<boolean> {
     return Boolean(user.webSubscriptionActive);
   }
 
-  const apiKey = import.meta.env.VITE_REVENUECAT_API_KEY as string | undefined;
+  const apiKey = getRevenueCatApiKey();
   if (!apiKey) return true;
 
   try {
@@ -148,7 +159,7 @@ export async function purchaseSubscription(
 ): Promise<{ success: boolean; message?: string }> {
   if (!Capacitor.isNativePlatform()) return { success: true };
 
-  const apiKey = import.meta.env.VITE_REVENUECAT_API_KEY as string | undefined;
+  const apiKey = getRevenueCatApiKey();
   if (!apiKey) {
     return { success: false, message: msg.notAvailable };
   }
@@ -178,7 +189,7 @@ export async function restorePurchases(
 ): Promise<{ success: boolean; message?: string }> {
   if (!Capacitor.isNativePlatform()) return { success: true };
 
-  const apiKey = import.meta.env.VITE_REVENUECAT_API_KEY as string | undefined;
+  const apiKey = getRevenueCatApiKey();
   if (!apiKey) {
     return { success: false, message: msg.restoreNotAvailable };
   }
