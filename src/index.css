@@ -2807,20 +2807,20 @@ header,
   color: #2b2a26;
 }
 
-/* "Neuer Tageseintrag" und zugehoerige Buttons in Pink */
+/* "Neuer Tageseintrag" und zugehoerige Buttons: Farbe des Stocks (inline), ohne Stockfarbe dunkel */
 .new-entry-toggle,
 .entry-form button[type="submit"],
 .edit-form-actions button[type="submit"] {
-  background-color: #d6336c;
+  background-color: #2b2a26;
   background-image: none;
-  border: 1px solid #b02558;
-  color: #fff;
+  border: 1px solid #2b2a26;
+  color: #f6f4ef;
   border-radius: 6px;
   box-shadow: none;
 }
 
 .new-entry-toggle.pulsing {
-  --hive-pulse-color: #b02558;
+  --hive-pulse-color: #2b2a26;
 }
 
 /* Stock-Aktionen: Eintrag-Button zuerst, Stammdaten per Button darunter */

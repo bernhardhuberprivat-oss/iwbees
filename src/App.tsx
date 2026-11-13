@@ -924,9 +924,16 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
             type="button"
             className={`new-entry-toggle hive-primary-btn ${showNewEntryForm ? "pulsing" : ""}`}
             style={
-              showNewEntryForm && selectedInfo?.color
-                ? ({ "--hive-pulse-color": selectedInfo.color } as any)
-                : undefined
+              {
+                ...(selectedInfo?.color
+                  ? {
+                      background: selectedInfo.color,
+                      borderColor: hiveRingColor(selectedInfo.color),
+                      color: readableTextColor(selectedInfo.color),
+                    }
+                  : {}),
+                ...(showNewEntryForm && selectedInfo?.color ? { "--hive-pulse-color": selectedInfo.color } : {}),
+              } as any
             }
             onClick={() => setShowNewEntryForm((v) => !v)}
           >
@@ -966,6 +973,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
           <button
             type="button"
             className="hive-master-toggle"
+            style={selectedInfo?.color ? { borderColor: hiveRingColor(selectedInfo.color), borderWidth: 2 } : undefined}
             aria-expanded={showMasterData}
             onClick={() => setMasterDataOpen((m) => ({ ...m, [selectedHive]: !showMasterData }))}
           >

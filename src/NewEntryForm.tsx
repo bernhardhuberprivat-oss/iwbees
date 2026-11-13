@@ -4,7 +4,7 @@ import { useState, FormEvent } from "react";
 import DatePicker from "./DatePicker";
 import { addPendingEntry } from "./offline";
 import { compressImages } from "./imageCompression";
-import { readableTextColor } from "./colorUtils";
+import { readableTextColor, hiveRingColor } from "./colorUtils";
 import { getQueenColorForYear } from "./types";
 import { apiUrl } from "./apiBase";
 import { useT, useLang, dateLocale } from "./i18n";
@@ -336,7 +336,15 @@ export default function NewEntryForm({
       {info && <p className="info">{info}</p>}
 
       <div className="submit-row">
-        <button type="submit" disabled={submitting}>
+        <button
+          type="submit"
+          disabled={submitting}
+          style={
+            hiveColor
+              ? { background: hiveColor, borderColor: hiveRingColor(hiveColor), color: readableTextColor(hiveColor) }
+              : undefined
+          }
+        >
           {submitting ? t.common.saving : t.entryForm.saveEntry}
         </button>
         {flying && (
