@@ -63,7 +63,7 @@ const de = {
     langSwitchLabel: "Sprache wechseln",
   },
   app: {
-    title: "🐝 isybee",
+    title: "isybee",
     subtitleLogin: "Dein digitales Bienentagebuch",
     subtitleDiary: (n: number) => `Kontrollen für deine ${n} Bienenstöcke`,
     hiveCountToggle: "Anzahl Bienenstöcke ändern",
@@ -91,6 +91,9 @@ const de = {
     newEntryToggleClose: "Neuer Tageseintrag ✕",
     newEntryToggleFirst: "+ Den ersten Tagebucheintrag machen",
     newEntryToggleNormal: "+ Neuer Tageseintrag",
+    entryForHive: (label: string) => `Für ${label} Tagebucheintrag machen`,
+    masterDataShow: "Stock-Stammdaten ansehen oder ändern",
+    masterDataHide: "Stammdaten schließen",
     eula: "Nutzungsbedingungen",
     privacy: "Datenschutzerklärung",
     confirmDeleteEntry: "Diesen Eintrag wirklich löschen?",
@@ -112,8 +115,13 @@ const de = {
     existingAccountText: "Du hast schon ein Konto?",
     existingAccountCta: "Anmelden",
   },
+  androidHint: {
+    text: "isybee gibt es jetzt als Android-App. Melde dich dort mit deinem Benutzernamen und Passwort an – alle deine Daten sind sofort da.",
+    button: "Im Play Store öffnen",
+    dismiss: "Nicht mehr anzeigen",
+  },
   installGuide: {
-    trigger: "📲 Wie installiere ich isybee als App?",
+    trigger: "Wie installiere ich isybee als App?",
     heading: "isybee als App installieren",
     intro: "So bekommst du isybee als eigene App auf dein Gerät.",
     androidTitle: "🤖 Android (Chrome)",
@@ -127,7 +135,7 @@ const de = {
     outro: "Danach startest du isybee wie jede andere App direkt vom Homescreen – inklusive Offline-Nutzung.",
   },
   gettingStarted: {
-    trigger: "🐝 Wie funktioniert isybee?",
+    trigger: "Wie funktioniert isybee?",
     heading: "So funktioniert isybee",
     intro: "Ganz einfach – in drei Schritten bist du startklar:",
     step1Title: "1. Anzahl deiner Bienenstöcke eingeben",
@@ -143,11 +151,12 @@ const de = {
   },
   photoTimeline: {
     buttonLabel: "📷 Foto-Zeitstrahl",
+    toggleLabel: "Foto-Zeitstrahl",
     heading: (label: string) => `📷 Foto-Zeitstrahl – ${label}`,
     empty: "Für diesen Stock gibt es noch keine Fotos.",
   },
   voiceNotes: {
-    toggleLabel: "🎙️ Sprachnotizen",
+    toggleLabel: "Sprachnotizen",
     recordStart: "Sprachnotiz aufnehmen",
     recording: (elapsed: string) => `Aufnahme läuft … ${elapsed} – zum Beenden tippen`,
     saveButton: "Aufnahme speichern?",
@@ -166,8 +175,8 @@ const de = {
     errDelete: "Löschen fehlgeschlagen.",
   },
   pdfExport: {
-    hiveButtonLabel: "📄 Diesen Stock exportieren",
-    allButtonLabel: "📄 Gesamtbericht exportieren",
+    hiveButtonLabel: (label: string) => `${label} exportieren`,
+    allButtonLabel: "Gesamtbericht exportieren",
     generating: "Erstelle PDF…",
     errGenerate: "PDF konnte nicht erstellt werden. Bitte erneut versuchen.",
     reportTitleHive: (label: string) => `isybee – Stockbericht: ${label}`,
@@ -372,6 +381,7 @@ const de = {
     noMark: "Keine Markierung",
     recentChanges: "Letzte Änderungen",
     noChanges: "Noch keine Änderungen.",
+    done: "Fertig",
   },
   datePicker: {
     weekdays: ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
@@ -444,7 +454,7 @@ const en: Dict = {
     langSwitchLabel: "Switch language",
   },
   app: {
-    title: "🐝 isybee",
+    title: "isybee",
     subtitleLogin: "Your digital beekeeping diary",
     subtitleDiary: (n: number) => `Track your ${n} beehives`,
     hiveCountToggle: "Change number of hives",
@@ -472,6 +482,9 @@ const en: Dict = {
     newEntryToggleClose: "New daily entry ✕",
     newEntryToggleFirst: "+ Make the first diary entry",
     newEntryToggleNormal: "+ New daily entry",
+    entryForHive: (label: string) => `Make a diary entry for ${label}`,
+    masterDataShow: "View or edit hive master data",
+    masterDataHide: "Close master data",
     eula: "Terms of use",
     privacy: "Privacy policy",
     confirmDeleteEntry: "Really delete this entry?",
@@ -491,8 +504,13 @@ const en: Dict = {
     existingAccountText: "Already have an account?",
     existingAccountCta: "Log in",
   },
+  androidHint: {
+    text: "isybee is now available as an Android app. Sign in there with your username and password – all your data is ready right away.",
+    button: "Open in Google Play",
+    dismiss: "Don't show again",
+  },
   installGuide: {
-    trigger: "📲 How do I install isybee as an app?",
+    trigger: "How do I install isybee as an app?",
     heading: "Install isybee as an app",
     intro: "Here's how to get isybee as its own app on your device.",
     androidTitle: "🤖 Android (Chrome)",
@@ -506,7 +524,7 @@ const en: Dict = {
     outro: "After that, isybee opens straight from your home screen like any other app – including offline use.",
   },
   gettingStarted: {
-    trigger: "🐝 How does isybee work?",
+    trigger: "How does isybee work?",
     heading: "How isybee works",
     intro: "Simple – you'll be ready to go in three steps:",
     step1Title: "1. Enter how many beehives you have",
@@ -522,11 +540,12 @@ const en: Dict = {
   },
   photoTimeline: {
     buttonLabel: "📷 Photo timeline",
+    toggleLabel: "Photo timeline",
     heading: (label: string) => `📷 Photo timeline – ${label}`,
     empty: "There are no photos for this hive yet.",
   },
   voiceNotes: {
-    toggleLabel: "🎙️ Voice notes",
+    toggleLabel: "Voice notes",
     recordStart: "Record a voice note",
     recording: (elapsed: string) => `Recording … ${elapsed} – tap to stop`,
     saveButton: "Save recording?",
@@ -545,8 +564,8 @@ const en: Dict = {
     errDelete: "Delete failed.",
   },
   pdfExport: {
-    hiveButtonLabel: "📄 Export this hive",
-    allButtonLabel: "📄 Export full report",
+    hiveButtonLabel: (label: string) => `Export ${label}`,
+    allButtonLabel: "Export full report",
     generating: "Creating PDF…",
     errGenerate: "Could not create the PDF. Please try again.",
     reportTitleHive: (label: string) => `isybee – Hive report: ${label}`,
@@ -748,6 +767,7 @@ const en: Dict = {
     noMark: "No marking",
     recentChanges: "Recent changes",
     noChanges: "No changes yet.",
+    done: "Done",
   },
   datePicker: {
     weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],

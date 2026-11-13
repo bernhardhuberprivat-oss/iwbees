@@ -2596,3 +2596,421 @@ header {
     --card: rgba(255, 255, 255, 0.92);
   }
 }
+
+/* ==========================================================================
+   Ruhiger Look (Vorschau, Nov 2026)
+   ==========================================================================
+   Ueberschreibt den Liquid-Glass-Look: flache, deckende Karten mit duenner
+   Linie, kleinere Radien, gedaempfte Steinfarben; Honig nur noch als Akzent.
+   Zum Zurueckdrehen: diesen ganzen Abschnitt loeschen (Sicherung in
+   ../Sicherung-vor-Redesign-*). */
+
+:root {
+  --honey: #b8862b;
+  --honey-dark: #7a5718;
+  --dark: #2b2a26;
+  --bg: #f6f4ef;
+  --card: #ffffff;
+  --border: #dcd8cd;
+  --glass-blur: 0px;
+  --glass-saturate: 100%;
+  --glass-border: #dcd8cd;
+  --glass-border-soft: #dcd8cd;
+  --glass-sheen: none;
+  --glass-sheen-strong: none;
+  --glass-shadow: none;
+  --glass-shadow-soft: none;
+}
+
+body {
+  background-image: none;
+  background-color: var(--bg);
+}
+
+.hive-count-editor,
+.user-picker,
+.user-option.new-user,
+.user-form-actions button.secondary,
+.status-bar,
+.hive-tabs button,
+.harvest-panel,
+.entry-tabs button,
+.color-picker,
+.swatch.clear,
+.entry-form,
+.date-toggle button,
+.entry-card,
+.change-log-day,
+.edit-form-actions button.secondary,
+.remove-photo-btn,
+.harvest-view,
+.paywall,
+.admin-panel,
+.lang-switch,
+.header-menu-toggle,
+.header-menu-panel,
+.welcome-bullets li,
+.install-guide-panel,
+.getting-started-panel,
+.photo-timeline-panel,
+.voice-notes-panel,
+.voice-record-btn,
+.hive-action-btn,
+header,
+.user-form-actions button,
+.sync-btn,
+.hive-tabs button.active,
+.entry-tabs button.active,
+.new-entry-toggle,
+.date-toggle button.active,
+.paywall button.primary,
+.lang-switch button.active,
+.welcome-cta {
+  background-image: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  border-color: var(--border);
+}
+
+/* Karten und Panels: kleinere Radien */
+header,
+.entry-card,
+.entry-form,
+.harvest-panel,
+.harvest-view,
+.paywall,
+.admin-panel,
+.status-bar,
+.change-log-day,
+.install-guide-panel,
+.getting-started-panel,
+.photo-timeline-panel,
+.voice-notes-panel,
+.hive-count-editor,
+.user-picker,
+.color-picker,
+.welcome-bullets li {
+  border-radius: 10px;
+}
+
+/* Buttons: dunkel statt orange gefuellt, kleine Radien */
+.user-form-actions button,
+.sync-btn,
+.new-entry-toggle,
+.paywall button.primary,
+.welcome-cta,
+.hive-tabs button.active,
+.entry-tabs button.active,
+.date-toggle button.active,
+.lang-switch button.active {
+  background-color: #2b2a26;
+  color: #f6f4ef;
+  border-color: #2b2a26;
+  border-radius: 6px;
+}
+
+/* Eckige Stock-Tabs und Ertrag-Leiste, App-Icon statt Biene im Titel */
+.hive-tabs button,
+.harvest-open-btn,
+.harvest-year-badge,
+.harvest-year-badge-btn {
+  border-radius: 6px;
+}
+
+.harvest-open-btn {
+  background: #2b2a26;
+  background-image: none;
+  color: #f6f4ef;
+  border: 1px solid #2b2a26;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+.harvest-year-badge,
+.harvest-year-badge-btn {
+  background: #fff;
+  border: 1px solid var(--border);
+  color: var(--dark);
+  box-shadow: none;
+}
+
+.hive-tabs button.active {
+  border-color: var(--dark);
+}
+
+.title-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+
+/* Kopfmenue: Linien-Icons vor jedem Punkt, flaches Panel */
+.menu-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.header-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.header-menu-item:hover {
+  background-color: #f6f4ef;
+}
+
+.header-menu-section-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--dark);
+}
+
+.header-menu-panel {
+  border-radius: 10px;
+  min-width: 250px;
+  box-shadow: 0 6px 20px rgba(43, 42, 38, 0.14);
+}
+
+.header-menu-toggle {
+  border-radius: 8px;
+}
+
+.header-menu-toggle span {
+  background-color: var(--dark);
+}
+
+.voice-notes-switch.on {
+  background-color: var(--dark);
+  border-color: var(--dark);
+}
+
+/* Ertrag-Button in der Farbe des App-Icons */
+.harvest-open-btn {
+  background: #f5a623;
+  border-color: #e08a14;
+  color: #2b2a26;
+}
+
+/* "Neuer Tageseintrag" und zugehoerige Buttons in Pink */
+.new-entry-toggle,
+.entry-form button[type="submit"],
+.edit-form-actions button[type="submit"] {
+  background-color: #d6336c;
+  background-image: none;
+  border: 1px solid #b02558;
+  color: #fff;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.new-entry-toggle.pulsing {
+  --hive-pulse-color: #b02558;
+}
+
+/* Stock-Aktionen: Eintrag-Button zuerst, Stammdaten per Button darunter */
+.hive-primary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.hive-primary-btn {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 1rem;
+}
+
+.hive-master-toggle {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: #fff;
+  color: var(--dark);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.stock-panel-done {
+  margin-top: 14px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #2b2a26;
+  border-radius: 6px;
+  background-color: #2b2a26;
+  color: #f6f4ef;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* --- Smoother: Icons, Status-Punkt, feste Tabs, weiche Uebergaenge --- */
+.menu-icon {
+  vertical-align: -3px;
+  margin-right: 6px;
+}
+
+.header-menu-item .menu-icon,
+.header-menu-section-label .menu-icon {
+  margin-right: 0;
+}
+
+.entry-meta .menu-icon,
+.harvest-bar .menu-icon,
+.hive-action-btn .menu-icon,
+.date-toggle .menu-icon,
+.user-bar .menu-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin: 0 6px;
+  vertical-align: 1px;
+}
+
+.status-dot.on {
+  background-color: #3a9b5c;
+}
+
+.status-dot.off {
+  background-color: #c0392b;
+}
+
+.hive-tabs {
+  position: sticky;
+  top: env(safe-area-inset-top);
+  z-index: 20;
+  background-color: var(--bg);
+  padding: 8px 0;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 700px) {
+  .hive-tabs {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .hive-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hive-tabs button {
+    flex-shrink: 0;
+  }
+}
+
+#daily-entries {
+  scroll-margin-top: 80px;
+}
+
+@keyframes soft-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.entry-form,
+.color-picker,
+.recent-changes-panel,
+.header-menu-panel,
+.entry-card {
+  animation: soft-in 0.18s ease-out;
+}
+
+@keyframes entry-flash {
+  0%,
+  60% {
+    box-shadow: 0 0 0 3px #d6336c;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.entry-card.entry-card-new {
+  animation: entry-flash 2.4s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entry-form,
+  .color-picker,
+  .recent-changes-panel,
+  .header-menu-panel,
+  .entry-card,
+  .entry-card.entry-card-new {
+    animation: none;
+  }
+}
+
+/* Hinweis auf die Android-App (nur Web auf Android-Handys) */
+.android-hint {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  background-color: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.android-hint p {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.android-hint-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.android-hint-btn {
+  padding: 10px 16px;
+  border-radius: 6px;
+  background-color: #2b2a26;
+  color: #f6f4ef;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.android-hint-close {
+  border: none;
+  background: none;
+  color: var(--dark);
+  opacity: 0.7;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+}

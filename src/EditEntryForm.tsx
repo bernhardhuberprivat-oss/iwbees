@@ -1,3 +1,4 @@
+import { Label } from "./Icon";
 import { useState, FormEvent } from "react";
 import DatePicker from "./DatePicker";
 import QueenColorField from "./QueenColorField";
@@ -129,7 +130,7 @@ export default function EditEntryForm({ entry, userId, onSaved, onCancel }: Prop
         <span className="field-label">{t.entryForm.date}</span>
         <div className="date-toggle">
           <button type="button" className="active" onClick={() => setShowDatePicker((v) => !v)}>
-            📅 {formatDisplay(entryDate)}
+            <Label text={`📅 ${formatDisplay(entryDate)}`} />
           </button>
         </div>
         {showDatePicker && (

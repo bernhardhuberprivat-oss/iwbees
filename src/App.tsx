@@ -23,6 +23,10 @@ import {
   markWelcomeSeen,
 } from "./userSession";
 import { isVoiceNotesEnabled, setVoiceNotesEnabled } from "./voiceNotesPref";
+import { Icon as MenuIcon, Label } from "./Icon";
+import AndroidAppHint from "./AndroidAppHint";
+import { hapticTap, hapticSuccess } from "./haptics";
+import { isPhotoTimelineEnabled, setPhotoTimelineEnabled } from "./photoTimelinePref";
 import { cacheGet, cacheSet, getPendingEntries, deletePendingEntry, pendingToDisplayEntry, syncPendingEntries } from "./offline";
 import { readableTextColor, hiveRingColor } from "./colorUtils";
 import { apiUrl } from "./apiBase";
@@ -80,6 +84,8 @@ function describeStockPatch(patch: Record<string, unknown>, t: ReturnType<typeof
 }
 
 type AccessState = "checking" | "granted" | "locked";
+
+
 
 export default function App() {
   const t = useT();
@@ -171,7 +177,7 @@ export default function App() {
       <div className="app">
         <LanguageSwitch />
         <header>
-          <h1>{t.app.title}</h1>
+          <h1><img className="title-icon" src="icon-192.png" alt="" />{t.app.title}</h1>
           <p className="subtitle">{t.app.subtitleLogin}</p>
         </header>
         <UserPicker
@@ -190,7 +196,7 @@ export default function App() {
       <div className="app">
         <LanguageSwitch />
         <header>
-          <h1>{t.app.title}</h1>
+          <h1><img className="title-icon" src="icon-192.png" alt="" />{t.app.title}</h1>
         </header>
         <p className="subtitle">{t.common.moment}</p>
       </div>
@@ -231,6 +237,8 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   const [syncing, setSyncing] = useState(false);
   const [hiveCount, setHiveCount] = useState(user.hiveCount || 10);
   const [showNewEntryForm, setShowNewEntryForm] = useState(false);
+  // Stammdaten-Maske pro Stock: undefined = Standard (offen nur bei einem komplett neuen Stock).
+  const [masterDataOpen, setMasterDataOpen] = useState<Record<number, boolean>>({});
   const [showHiveCountEditor, setShowHiveCountEditor] = useState(false);
   const [hiveCountInput, setHiveCountInput] = useState(String(user.hiveCount || 10));
   const [hiveCountError, setHiveCountError] = useState("");
@@ -242,6 +250,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   const [showGettingStarted, setShowGettingStarted] = useState(false);
   const [showPhotoTimeline, setShowPhotoTimeline] = useState(false);
   const [voiceNotesEnabled, setVoiceNotesEnabledState] = useState(() => isVoiceNotesEnabled());
+  const [photoTimelineEnabled, setPhotoTimelineEnabledState] = useState(() => isPhotoTimelineEnabled());
   const [showVoiceNoteReview, setShowVoiceNoteReview] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
   const [pdfError, setPdfError] = useState("");
@@ -376,8 +385,8 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   }, [selectedHive]);
 
   const loadEntries = useCallback(async () => {
-    setLoading(true);
     const cacheKey = `entries:${user.id}:${selectedHive}`;
+    if (!cacheGet<Entry[]>(cacheKey)) setLoading(true);
     try {
       const query = selectedHive === "all" ? "" : `&hive=${selectedHive}`;
       const res = await fetch(apiUrl(`/api/entries?userId=${user.id}${query}`));
@@ -438,6 +447,12 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
   }, [user.id]);
 
   useEffect(() => {
+    // Beim Stock-Wechsel sofort den zuletzt bekannten Stand zeigen, dann im Hintergrund aktualisieren.
+    const cached = cacheGet<Entry[]>(`entries:${user.id}:${selectedHive}`);
+    if (cached) {
+      mergeWithPending(cached);
+      setLoading(false);
+    }
     loadEntries();
   }, [loadEntries]);
 
@@ -571,6 +586,18 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
     typeof selectedHive === "number" &&
     !entries.some((e) => e.hive === selectedHive && !e.notes?.startsWith(STOCK_CHANGE_PREFIX));
 
+  // Ein komplett neuer Stock (noch keine Stammdaten, kein Eintrag) oeffnet die Stammdaten-
+  // Maske gleich; danach bleibt sie zu und wird ueber den Button darunter geoeffnet.
+  const isNewHive =
+    isFirstEntryForSelectedHive &&
+    !selectedInfo?.name?.trim() &&
+    !selectedInfo?.category &&
+    !selectedInfo?.queenYear &&
+    !selectedInfo?.colonyStrength;
+  const showMasterData = typeof selectedHive === "number" ? masterDataOpen[selectedHive] ?? isNewHive : false;
+  const selectedHiveLabel =
+    typeof selectedHive === "number" ? selectedInfo?.name?.trim() || t.common.hiveFallback(selectedHive) : "";
+
   // Zeigt im Stammdaten-Fenster nur an, ob laut dem letzten Tageseintrag mit erfasster
   // Varroamilben-Angabe aktuell "Ja" gilt - verschwindet automatisch, sobald ein neuerer
   // Eintrag "Nein" erfasst. Rein abgeleitet, hier nicht editierbar (nur im Tageseintrag).
@@ -611,7 +638,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
         {showHeaderMenu && (
           <div className="header-menu-panel" role="menu">
             <div className="header-menu-section">
-              <span className="header-menu-section-label">{t.app.menuLanguageLabel}</span>
+              <span className="header-menu-section-label"><MenuIcon name="globe" />{t.app.menuLanguageLabel}</span>
               <div className="lang-switch" role="group" aria-label={t.common.langSwitchLabel}>
                 <button type="button" className={lang === "de" ? "active" : ""} onClick={() => setLang("de")}>
                   DE
@@ -622,7 +649,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
               </div>
             </div>
             <div className="header-menu-section">
-              <span className="header-menu-section-label">{t.voiceNotes.toggleLabel}</span>
+              <span className="header-menu-section-label"><MenuIcon name="mic" />{t.voiceNotes.toggleLabel}</span>
               <button
                 type="button"
                 role="switch"
@@ -630,8 +657,26 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
                 className={`voice-notes-switch ${voiceNotesEnabled ? "on" : ""}`}
                 onClick={() => {
                   const next = !voiceNotesEnabled;
+                  hapticTap();
                   setVoiceNotesEnabledState(next);
                   setVoiceNotesEnabled(next);
+                }}
+              >
+                <span className="voice-notes-switch-knob" />
+              </button>
+            </div>
+            <div className="header-menu-section">
+              <span className="header-menu-section-label"><MenuIcon name="camera" />{t.photoTimeline.toggleLabel}</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={photoTimelineEnabled}
+                className={`voice-notes-switch ${photoTimelineEnabled ? "on" : ""}`}
+                onClick={() => {
+                  const next = !photoTimelineEnabled;
+                  hapticTap();
+                  setPhotoTimelineEnabledState(next);
+                  setPhotoTimelineEnabled(next);
                 }}
               >
                 <span className="voice-notes-switch-knob" />
@@ -645,8 +690,22 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
                 setShowGettingStarted(true);
               }}
             >
-              {t.gettingStarted.trigger}
+              <MenuIcon name="help" />{t.gettingStarted.trigger}
             </button>
+            {typeof selectedHive === "number" && (
+              <button
+                type="button"
+                className="header-menu-item"
+                onClick={() => {
+                  setShowHeaderMenu(false);
+                  handleExportHivePdf();
+                }}
+                disabled={exportingPdf}
+              >
+                <MenuIcon name="pdf" />
+                {exportingPdf ? t.pdfExport.generating : t.pdfExport.hiveButtonLabel(selectedHiveLabel)}
+              </button>
+            )}
             <button
               type="button"
               className="header-menu-item"
@@ -656,7 +715,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
               }}
               disabled={exportingPdf}
             >
-              {exportingPdf ? t.pdfExport.generating : t.pdfExport.allButtonLabel}
+              <MenuIcon name="pdf" />{exportingPdf ? t.pdfExport.generating : t.pdfExport.allButtonLabel}
             </button>
             {!Capacitor.isNativePlatform() && (
               <button
@@ -667,7 +726,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
                   setShowInstallGuide(true);
                 }}
               >
-                {t.installGuide.trigger}
+                <MenuIcon name="install" />{t.installGuide.trigger}
               </button>
             )}
             <a
@@ -675,7 +734,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
               href={FEEDBACK_MAILTO}
               onClick={() => setShowHeaderMenu(false)}
             >
-              {t.feedback.menuLabel}
+              <MenuIcon name="feedback" />{t.feedback.menuLabel}
             </a>
             {isAdminUser(user) && (
               <button
@@ -686,7 +745,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
                   setShowAdminPanel(true);
                 }}
               >
-                {t.app.manageUsers}
+                <MenuIcon name="admin" />{t.app.manageUsers}
               </button>
             )}
             {!Capacitor.isNativePlatform() && user.webSubscriptionActive && !user.isGifted && (
@@ -699,7 +758,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
                 }}
                 disabled={openingBillingPortal}
               >
-                {openingBillingPortal ? t.common.moment : t.app.manageSubscription}
+                <MenuIcon name="card" />{openingBillingPortal ? t.common.moment : t.app.manageSubscription}
               </button>
             )}
             <button
@@ -710,13 +769,13 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
                 onSwitchUser();
               }}
             >
-              {t.app.switchUser}
+              <MenuIcon name="switch" />{t.app.switchUser}
             </button>
           </div>
         )}
       </div>
       <header>
-        <h1>{t.app.title}</h1>
+        <h1><img className="title-icon" src="icon-192.png" alt="" />{t.app.title}</h1>
         <p className="subtitle">{t.app.subtitleDiary(hiveCount)}</p>
         <button
           type="button"
@@ -755,8 +814,13 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
         )}
       </header>
 
+      <AndroidAppHint />
+
       <div className="user-bar">
-        <span>{t.app.userGreeting(user.name)}</span>
+        <span className="user-name">
+          <Label text={t.app.userGreeting(user.name)} />
+          <span className={`status-dot ${isOnline ? "on" : "off"}`} title={isOnline ? t.app.online : t.app.offline} />
+        </span>
         {totalUserCount !== null && (
           <span className="admin-user-count" title={t.app.adminOnlyHint}>
             {t.app.totalUsers(totalUserCount)}
@@ -766,8 +830,9 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
 
       {showAdminPanel && <AdminPanel adminUser={user} onClose={() => setShowAdminPanel(false)} />}
 
+      {(!isOnline || pendingCount > 0) && (
       <div className={`status-bar ${isOnline ? "online" : "offline"}`}>
-        <span>{isOnline ? t.app.online : t.app.offline}</span>
+        {!isOnline && <span><Label text={t.app.offline} /></span>}
         {pendingCount > 0 && (
           <span className="pending-info">
             {t.app.pendingInfo(pendingCount)}
@@ -779,11 +844,15 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
           </span>
         )}
       </div>
+      )}
 
       <nav className="hive-tabs">
         <button
           className={selectedHive === "all" ? "active" : ""}
-          onClick={() => setSelectedHive("all")}
+          onClick={() => {
+            hapticTap();
+            setSelectedHive("all");
+          }}
         >
           {t.app.tabAll}
         </button>
@@ -805,7 +874,10 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
               key={h}
               className={className}
               style={style}
-              onClick={() => setSelectedHive(h)}
+              onClick={() => {
+                hapticTap();
+                setSelectedHive(h);
+              }}
             >
               {label}
             </button>
@@ -815,14 +887,14 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
 
       <div className="harvest-bar">
         <button type="button" className="harvest-open-btn" onClick={() => setShowHarvestPanel(true)}>
-          {t.app.harvestEnter}
+          <Label text={t.app.harvestEnter} />
         </button>
         <button
           type="button"
           className="harvest-year-badge harvest-year-badge-btn"
           onClick={() => setShowHarvestSummary(true)}
         >
-          {t.app.harvestYearBadge(harvestYearTotal, new Date().getFullYear())}
+          <Label text={t.app.harvestYearBadge(harvestYearTotal, new Date().getFullYear())} />
         </button>
       </div>
 
@@ -847,7 +919,64 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       )}
 
       {typeof selectedHive === "number" && (
+        <div className="hive-primary-actions">
+          <button
+            type="button"
+            className={`new-entry-toggle hive-primary-btn ${showNewEntryForm ? "pulsing" : ""}`}
+            style={
+              showNewEntryForm && selectedInfo?.color
+                ? ({ "--hive-pulse-color": selectedInfo.color } as any)
+                : undefined
+            }
+            onClick={() => setShowNewEntryForm((v) => !v)}
+          >
+            {showNewEntryForm ? t.app.newEntryToggleClose : t.app.entryForHive(selectedHiveLabel)}
+          </button>
+
+          {showNewEntryForm && (
+            <NewEntryForm
+              key={selectedHive}
+              userId={user.id}
+              hive={selectedHive}
+              hiveColor={selectedInfo?.color ?? undefined}
+              hiveName={selectedInfo?.name ?? undefined}
+              queenYear={selectedInfo?.queenYear ?? null}
+              colonyStrength={selectedInfo?.colonyStrength ?? null}
+              voiceNotesEnabled={voiceNotesEnabled}
+              onCreated={async () => {
+                hapticSuccess();
+                const loaded = loadEntries();
+                // Fenster erst schließen, wenn die Biene fertig davongeflogen ist.
+                await new Promise((r) => setTimeout(r, 1300));
+                await loaded;
+                setShowNewEntryForm(false);
+                // Danach zum neuen Eintrag scrollen und ihn kurz hervorheben.
+                setTimeout(() => {
+                  const list = document.getElementById("daily-entries");
+                  list?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  const first = list?.querySelector(".entry-card");
+                  first?.classList.add("entry-card-new");
+                  setTimeout(() => first?.classList.remove("entry-card-new"), 2600);
+                }, 120);
+              }}
+              onClose={() => setShowNewEntryForm(false)}
+            />
+          )}
+
+          <button
+            type="button"
+            className="hive-master-toggle"
+            aria-expanded={showMasterData}
+            onClick={() => setMasterDataOpen((m) => ({ ...m, [selectedHive]: !showMasterData }))}
+          >
+            {showMasterData ? t.app.masterDataHide : t.app.masterDataShow}
+          </button>
+        </div>
+      )}
+
+      {typeof selectedHive === "number" && showMasterData && (
         <ColorPicker
+          onDone={() => setMasterDataOpen((m) => ({ ...m, [selectedHive]: false }))}
           hive={selectedHive}
           currentColor={selectedInfo?.color}
           currentName={selectedInfo?.name}
@@ -868,19 +997,18 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
         />
       )}
 
-      {typeof selectedHive === "number" && (
+      {typeof selectedHive === "number" && (photoTimelineEnabled || voiceNotesEnabled) && (
         <div className="hive-actions-bar">
-          <button type="button" className="hive-action-btn" onClick={() => setShowPhotoTimeline(true)}>
-            {t.photoTimeline.buttonLabel}
-          </button>
-          {voiceNotesEnabled && (
-            <button type="button" className="hive-action-btn" onClick={() => setShowVoiceNoteReview(true)}>
-              {t.voiceNotes.reviewButtonLabel}
+          {photoTimelineEnabled && (
+            <button type="button" className="hive-action-btn" onClick={() => setShowPhotoTimeline(true)}>
+              <Label text={t.photoTimeline.buttonLabel} />
             </button>
           )}
-          <button type="button" className="hive-action-btn" onClick={handleExportHivePdf} disabled={exportingPdf}>
-            {exportingPdf ? t.pdfExport.generating : t.pdfExport.hiveButtonLabel}
-          </button>
+          {voiceNotesEnabled && (
+            <button type="button" className="hive-action-btn" onClick={() => setShowVoiceNoteReview(true)}>
+              <Label text={t.voiceNotes.reviewButtonLabel} />
+            </button>
+          )}
         </div>
       )}
 
@@ -907,45 +1035,8 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
         {selectedHive === "all" && <p className="muted hint">{t.app.hintPickHive}</p>}
         <section>
           <div className="section-heading-row">
-            <h2>{t.app.dailyEntries}</h2>
-            {selectedHive !== "all" && (
-              <button
-                type="button"
-                className={`new-entry-toggle ${showNewEntryForm ? "pulsing" : ""}`}
-                style={
-                  showNewEntryForm && selectedInfo?.color
-                    ? ({ "--hive-pulse-color": selectedInfo.color } as any)
-                    : undefined
-                }
-                onClick={() => setShowNewEntryForm((v) => !v)}
-              >
-                {showNewEntryForm
-                  ? t.app.newEntryToggleClose
-                  : isFirstEntryForSelectedHive
-                  ? t.app.newEntryToggleFirst
-                  : t.app.newEntryToggleNormal}
-              </button>
-            )}
+            <h2 id="daily-entries">{t.app.dailyEntries}</h2>
           </div>
-
-          {selectedHive !== "all" && showNewEntryForm && (
-            <NewEntryForm
-              key={selectedHive}
-              userId={user.id}
-              hive={selectedHive}
-              hiveColor={selectedInfo?.color ?? undefined}
-              hiveName={selectedInfo?.name ?? undefined}
-              queenYear={selectedInfo?.queenYear ?? null}
-              colonyStrength={selectedInfo?.colonyStrength ?? null}
-              voiceNotesEnabled={voiceNotesEnabled}
-              onCreated={() => {
-                loadEntries();
-                // Fenster erst schließen, wenn die Biene fertig davongeflogen ist.
-                setTimeout(() => setShowNewEntryForm(false), 1300);
-              }}
-              onClose={() => setShowNewEntryForm(false)}
-            />
-          )}
 
           <EntryList
             entries={diaryEntries}

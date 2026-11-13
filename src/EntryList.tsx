@@ -1,3 +1,4 @@
+import { Label } from "./Icon";
 import { useEffect, useState } from "react";
 import { Entry, HiveInfo } from "./types";
 import { readableTextColor } from "./colorUtils";
@@ -88,16 +89,16 @@ export default function EntryList({ entries, loading, userId, onDelete, onUpdate
           <div className="entry-meta">
             {entry.queen_color && (
               <span>
-                {t.entryList.queen(entry.queen_year)}{" "}
+                <Label text={t.entryList.queen(entry.queen_year)} />{" "}
                 <span className="queen-dot" style={{ background: entry.queen_color }} />
               </span>
             )}
             {entry.colony_strength && (
-              <span>{t.entryList.strength(t.strengthLabels[entry.colony_strength] ?? entry.colony_strength)}</span>
+              <span><Label text={t.entryList.strength(t.strengthLabels[entry.colony_strength] ?? entry.colony_strength)} /></span>
             )}
-            {entry.varroa && <span>{t.entryList.varroa(entry.varroa)}</span>}
-            {entry.feeding && <span>{t.entryList.feeding(entry.feeding)}</span>}
-            {entry.weight_kg && <span>{t.entryList.weight(entry.weight_kg)}</span>}
+            {entry.varroa && <span><Label text={t.entryList.varroa(entry.varroa)} /></span>}
+            {entry.feeding && <span><Label text={t.entryList.feeding(entry.feeding)} /></span>}
+            {entry.weight_kg && <span><Label text={t.entryList.weight(entry.weight_kg)} /></span>}
           </div>
 
           {(() => {
@@ -112,10 +113,10 @@ export default function EntryList({ entries, loading, userId, onDelete, onUpdate
             if (!hasSightingInfo) return null;
             return (
               <div className="entry-meta entry-sightings">
-                {seen.length > 0 && <span>{t.entryList.sightingsLabel(seen.join(", "))}</span>}
-                {entry.occupied_combs != null && <span>{t.entryList.combs(entry.occupied_combs)}</span>}
-                {entry.queen_cells != null && <span>{t.entryList.cells(entry.queen_cells)}</span>}
-                {entry.varroa_mites != null && <span>{t.entryList.mites(entry.varroa_mites)}</span>}
+                {seen.length > 0 && <span><Label text={t.entryList.sightingsLabel(seen.join(", "))} /></span>}
+                {entry.occupied_combs != null && <span><Label text={t.entryList.combs(entry.occupied_combs)} /></span>}
+                {entry.queen_cells != null && <span><Label text={t.entryList.cells(entry.queen_cells)} /></span>}
+                {entry.varroa_mites != null && <span><Label text={t.entryList.mites(entry.varroa_mites)} /></span>}
               </div>
             );
           })()}

@@ -1,3 +1,5 @@
+import { Label } from "./Icon";
+import { hapticTap } from "./haptics";
 import { useState, FormEvent } from "react";
 import DatePicker from "./DatePicker";
 import { addPendingEntry } from "./offline";
@@ -206,7 +208,7 @@ export default function NewEntryForm({
             className={entryDate !== today() ? "active" : ""}
             onClick={() => setShowDatePicker((v) => !v)}
           >
-            {t.entryForm.customDate(formatDisplay(entryDate), entryDate !== today())}
+            <Label text={t.entryForm.customDate(formatDisplay(entryDate), entryDate !== today())} />
           </button>
         </div>
         {showDatePicker && (
@@ -225,19 +227,19 @@ export default function NewEntryForm({
 
         <div className="sightings-checks">
           <label className="sighting-check">
-            <input type="checkbox" checked={sightingQueen} onChange={(e) => setSightingQueen(e.target.checked)} />
+            <input type="checkbox" checked={sightingQueen} onChange={(e) => { hapticTap(); setSightingQueen(e.target.checked); }} />
             {t.entryForm.sightingQueen}
           </label>
           <label className="sighting-check">
-            <input type="checkbox" checked={sightingLarvae} onChange={(e) => setSightingLarvae(e.target.checked)} />
+            <input type="checkbox" checked={sightingLarvae} onChange={(e) => { hapticTap(); setSightingLarvae(e.target.checked); }} />
             {t.entryForm.sightingLarvae}
           </label>
           <label className="sighting-check">
-            <input type="checkbox" checked={sightingEggs} onChange={(e) => setSightingEggs(e.target.checked)} />
+            <input type="checkbox" checked={sightingEggs} onChange={(e) => { hapticTap(); setSightingEggs(e.target.checked); }} />
             {t.entryForm.sightingEggs}
           </label>
           <label className="sighting-check">
-            <input type="checkbox" checked={sightingBrood} onChange={(e) => setSightingBrood(e.target.checked)} />
+            <input type="checkbox" checked={sightingBrood} onChange={(e) => { hapticTap(); setSightingBrood(e.target.checked); }} />
             {t.entryForm.sightingBrood}
           </label>
         </div>

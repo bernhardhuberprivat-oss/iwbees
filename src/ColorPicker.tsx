@@ -20,6 +20,7 @@ interface Props {
   onCategoryChange: (category: string | null) => void;
   onQueenYearChange: (year: number | null) => void;
   onColonyStrengthChange: (value: string | null) => void;
+  onDone?: () => void;
 }
 
 export default function ColorPicker({
@@ -38,6 +39,7 @@ export default function ColorPicker({
   onCategoryChange,
   onQueenYearChange,
   onColonyStrengthChange,
+  onDone,
 }: Props) {
   const t = useT();
   const [name, setName] = useState(currentName || "");
@@ -184,6 +186,11 @@ export default function ColorPicker({
           </div>
         )}
       </div>
+      {onDone && (
+        <button type="button" className="stock-panel-done" onClick={onDone}>
+          {t.colorPicker.done}
+        </button>
+      )}
     </div>
   );
 }
