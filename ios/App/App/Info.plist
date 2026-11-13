@@ -22,16 +22,18 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>isybee braucht Zugriff auf die Kamera, um Fotos deiner Bienenstöcke direkt im Tagebuch aufzunehmen.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>isybee braucht Zugriff auf das Mikrofon, um Sprachnotizen zu deinen Bienenstöcken aufzunehmen.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>isybee kann aufgenommene Fotos deiner Bienenstöcke optional in deiner Fotomediathek speichern.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>isybee braucht Zugriff auf deine Fotomediathek, um vorhandene Fotos deiner Bienenstöcke als Tagebucheintrag hinzuzufügen.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>isybee braucht Zugriff auf das Mikrofon, um Sprachnotizen zu deinen Bienenstöcken aufzunehmen.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
