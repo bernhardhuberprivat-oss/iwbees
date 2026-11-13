@@ -3014,3 +3014,8 @@ header,
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* Kopfmenue immer ueber den festen Stock-Tabs (z-index 20) */
+.header-menu {
+  z-index: 40;
+}
