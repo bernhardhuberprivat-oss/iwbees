@@ -1,3 +1,4 @@
+import Brand from "./Brand";
 import { useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { useT } from "./i18n";
@@ -24,8 +25,9 @@ export default function Welcome({ onGetStarted, onLogin }: Props) {
 
   return (
     <div className="app welcome-screen">
-      <img src="/icon-512.png" alt="isybee" className="welcome-icon" />
-      <h1 className="welcome-wordmark">isybee</h1>
+      <h1 className="brand-heading">
+        <Brand size={64} icon="icon-512.png" />
+      </h1>
       <p className="welcome-claim">{t.welcome.claim}</p>
 
       <ul className="welcome-bullets">

@@ -8,7 +8,7 @@ import HarvestSummary from "./HarvestSummary";
 import UserPicker from "./UserPicker";
 import Welcome from "./Welcome";
 import InstallGuide from "./InstallGuide";
-import GettingStartedGuide from "./GettingStartedGuide";
+import ManualGuide from "./ManualGuide";
 import PhotoTimeline from "./PhotoTimeline";
 import VoiceNoteReview from "./VoiceNoteReview";
 import Paywall from "./Paywall";
@@ -25,6 +25,7 @@ import {
 import { isVoiceNotesEnabled, setVoiceNotesEnabled } from "./voiceNotesPref";
 import { Icon as MenuIcon, Label } from "./Icon";
 import AndroidAppHint from "./AndroidAppHint";
+import Brand from "./Brand";
 import { hapticTap, hapticSuccess } from "./haptics";
 import { isPhotoTimelineEnabled, setPhotoTimelineEnabled } from "./photoTimelinePref";
 import { cacheGet, cacheSet, getPendingEntries, deletePendingEntry, pendingToDisplayEntry, syncPendingEntries } from "./offline";
@@ -177,7 +178,7 @@ export default function App() {
       <div className="app">
         <LanguageSwitch />
         <header>
-          <h1><img className="title-icon" src="icon-192.png" alt="" />{t.app.title}</h1>
+          <h1 className="brand-heading"><Brand /></h1>
           <p className="subtitle">{t.app.subtitleLogin}</p>
         </header>
         <UserPicker
@@ -196,7 +197,7 @@ export default function App() {
       <div className="app">
         <LanguageSwitch />
         <header>
-          <h1><img className="title-icon" src="icon-192.png" alt="" />{t.app.title}</h1>
+          <h1 className="brand-heading"><Brand /></h1>
         </header>
         <p className="subtitle">{t.common.moment}</p>
       </div>
@@ -637,6 +638,17 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
         </button>
         {showHeaderMenu && (
           <div className="header-menu-panel" role="menu">
+            <div className="header-menu-user">
+              <span className="header-menu-user-name">
+                <Label text={t.app.userGreeting(user.name)} />
+                <span className={`status-dot ${isOnline ? "on" : "off"}`} title={isOnline ? t.app.online : t.app.offline} />
+              </span>
+              {totalUserCount !== null && (
+                <span className="admin-user-count" title={t.app.adminOnlyHint}>
+                  {t.app.totalUsers(totalUserCount)}
+                </span>
+              )}
+            </div>
             <div className="header-menu-section">
               <span className="header-menu-section-label"><MenuIcon name="globe" />{t.app.menuLanguageLabel}</span>
               <div className="lang-switch" role="group" aria-label={t.common.langSwitchLabel}>
@@ -687,10 +699,23 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
               className="header-menu-item"
               onClick={() => {
                 setShowHeaderMenu(false);
+                setHiveCountInput(String(hiveCount));
+                setHiveCountError("");
+                setShowHiveCountEditor(true);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
+              <MenuIcon name="grid" />{t.app.hiveCountToggle}
+            </button>
+            <button
+              type="button"
+              className="header-menu-item"
+              onClick={() => {
+                setShowHeaderMenu(false);
                 setShowGettingStarted(true);
               }}
             >
-              <MenuIcon name="help" />{t.gettingStarted.trigger}
+              <MenuIcon name="book" />{t.manual.trigger}
             </button>
             {typeof selectedHive === "number" && (
               <button
@@ -775,19 +800,8 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
         )}
       </div>
       <header>
-        <h1><img className="title-icon" src="icon-192.png" alt="" />{t.app.title}</h1>
+        <h1 className="brand-heading"><Brand /></h1>
         <p className="subtitle">{t.app.subtitleDiary(hiveCount)}</p>
-        <button
-          type="button"
-          className="hive-count-toggle"
-          onClick={() => {
-            setHiveCountInput(String(hiveCount));
-            setHiveCountError("");
-            setShowHiveCountEditor((v) => !v);
-          }}
-        >
-          {t.app.hiveCountToggle}
-        </button>
         {showHiveCountEditor && (
           <form className="hive-count-editor" onSubmit={handleSaveHiveCount}>
             <label>
@@ -815,18 +829,6 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
       </header>
 
       <AndroidAppHint />
-
-      <div className="user-bar">
-        <span className="user-name">
-          <Label text={t.app.userGreeting(user.name)} />
-          <span className={`status-dot ${isOnline ? "on" : "off"}`} title={isOnline ? t.app.online : t.app.offline} />
-        </span>
-        {totalUserCount !== null && (
-          <span className="admin-user-count" title={t.app.adminOnlyHint}>
-            {t.app.totalUsers(totalUserCount)}
-          </span>
-        )}
-      </div>
 
       {showAdminPanel && <AdminPanel adminUser={user} onClose={() => setShowAdminPanel(false)} />}
 
@@ -1069,7 +1071,7 @@ function Diary({ user, onSwitchUser }: DiaryProps) {
 
       {showInstallGuide && <InstallGuide onClose={() => setShowInstallGuide(false)} />}
 
-      {showGettingStarted && <GettingStartedGuide onClose={() => setShowGettingStarted(false)} />}
+      {showGettingStarted && <ManualGuide onClose={() => setShowGettingStarted(false)} />}
     </div>
   );
 }

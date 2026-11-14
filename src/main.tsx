@@ -3,6 +3,9 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import { LangProvider } from "./i18n";
 import "./index.css";
+import { initDuoLayout } from "./duoLayout";
+
+initDuoLayout();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

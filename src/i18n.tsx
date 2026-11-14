@@ -134,6 +134,53 @@ const de = {
     iosButton: "Im App Store öffnen",
     outro: "Danach startest du isybee wie jede andere App direkt vom Homescreen – inklusive Offline-Nutzung.",
   },
+  manual: {
+    trigger: "Benutzerhandbuch",
+    heading: "Benutzerhandbuch",
+    intro: "So bedienst du isybee, Schritt für Schritt.",
+    chapters: [
+      {
+        title: "1. Start: Anzahl der Bienenstöcke",
+        text: "Öffne oben rechts das Menü (die drei Striche) und tippe auf „Anzahl Bienenstöcke ändern“. Gib ein, wie viele Stöcke du hast. isybee legt für jeden Stock einen eigenen Reiter an. Die Reiter stehen immer oben auf dem Bildschirm, damit du jederzeit zwischen den Stöcken wechseln kannst.",
+      },
+      {
+        title: "2. Stock benennen und markieren",
+        text: "Tippe auf einen Stock-Reiter. Bei einem neuen Stock öffnen sich die Stammdaten gleich von selbst: Name, Kategorie (zum Beispiel Wirtschaftsvolk oder Ableger), Volksstärke, Zuchtjahr der Königin und die Markierungsfarbe. Mit „Fertig“ schließt du die Maske. Später erreichst du sie über „Stock-Stammdaten ansehen oder ändern“. Unter „Letzte Änderungen“ siehst du, was du zuletzt geändert hast.",
+      },
+      {
+        title: "3. Tagebucheintrag machen",
+        text: "Wähle einen Stock und tippe auf den großen Button „Für Stock … Tagebucheintrag machen“. Er hat die Farbe deines Stocks. Das Datum steht automatisch auf heute, du kannst es über „Individuelles Datum“ ändern.\nTrage ein, was du beobachtet hast: Königin, Larven, Eier, Brut, belegte Waben, Weiselzellen, Varroa, Fütterung, Stockgewicht und eine Notiz. Du kannst Fotos anhängen. Mit „Eintrag speichern“ ist der Eintrag gesichert, danach springt die Ansicht zum neuen Eintrag.",
+      },
+      {
+        title: "4. Einträge ansehen, ändern, löschen",
+        text: "Unter „Tageseinträge“ stehen alle Einträge. Wähle „Alle“, um die Einträge aller Stöcke zu sehen, oder einen einzelnen Stock. Mit dem Stift änderst du einen Eintrag, mit dem Kreuz löschst du ihn. Gelöscht ist endgültig.",
+      },
+      {
+        title: "5. Ertrag erfassen",
+        text: "Mit „Ertrag eingeben“ trägst du die Honigernte ein. Das Feld daneben zeigt die Summe für das Jahr. Wenn du darauf tippst, siehst du die Auswertung pro Stock.",
+      },
+      {
+        title: "6. Foto-Zeitstrahl",
+        text: "Der Foto-Zeitstrahl ist ausgeschaltet. Schalte ihn im Menü ein. Dann erscheint bei jedem Stock ein Button mit allen Fotos dieses Stocks in zeitlicher Reihenfolge.",
+      },
+      {
+        title: "7. Sprachnotizen",
+        text: "Schalte „Sprachnotizen“ im Menü ein. Beim Tagebucheintrag kannst du dann eine Notiz aufsprechen. Die gespeicherten Aufnahmen findest du pro Stock unter „Gespeicherte Sprachnotizen“. Beim ersten Mal fragt dein Gerät nach dem Zugriff auf das Mikrofon.",
+      },
+      {
+        title: "8. Exportieren",
+        text: "Im Menü gibt es zwei PDF-Exporte: „Export <Stockname>“ für den gerade gewählten Stock und „Gesamtbericht exportieren“ für alle Stöcke. Den Export für einen Stock siehst du nur, wenn ein Stock ausgewählt ist.",
+      },
+      {
+        title: "9. Ohne Internet",
+        text: "Ohne Verbindung speichert isybee deine Einträge auf dem Gerät. Oben erscheint dann ein Hinweis. Sobald du wieder online bist, werden sie automatisch hochgeladen, oder du tippst auf „Jetzt synchronisieren“. Der grüne Punkt neben deinem Namen im Menü zeigt, dass du online bist, ein roter, dass du offline bist.",
+      },
+      {
+        title: "10. Konto, Sprache und Abo",
+        text: "Im Menü wechselst du die Sprache (Deutsch oder Englisch) und den Benutzer. isybee ist 30 Tage kostenlos, danach kostet es 0,99 € im Monat. Das Abo verwaltest du je nach Gerät im App Store, bei Google Play oder im Menü über „Abo verwalten“.",
+      },
+    ],
+  },
   gettingStarted: {
     trigger: "Wie funktioniert isybee?",
     heading: "So funktioniert isybee",
@@ -522,6 +569,53 @@ const en: Dict = {
     iosText: "For iPhone and iPad, isybee is available as its own app in the App Store.",
     iosButton: "Open in the App Store",
     outro: "After that, isybee opens straight from your home screen like any other app – including offline use.",
+  },
+  manual: {
+    trigger: "User guide",
+    heading: "User guide",
+    intro: "How to use isybee, step by step.",
+    chapters: [
+      {
+        title: "1. Getting started: number of hives",
+        text: 'Open the menu at the top right (the three lines) and tap "Change number of hives". Enter how many hives you have. isybee creates a tab for each hive. The tabs always stay at the top of the screen, so you can switch hives at any time.',
+      },
+      {
+        title: "2. Name and mark a hive",
+        text: 'Tap a hive tab. For a new hive the master data opens automatically: name, category (for example production colony or nuc), colony strength, queen year and the marking color. Close it with "Done". You can open it again later with "View or edit hive master data". Under "Recent changes" you can see what you changed last.',
+      },
+      {
+        title: "3. Make a diary entry",
+        text: 'Select a hive and tap the large button "Make a diary entry for …". It has the color of your hive. The date is set to today, you can change it with "Custom date".\nRecord what you observed: queen, larvae, eggs, brood, occupied combs, queen cells, varroa, feeding, hive weight and a note. You can attach photos. With "Save entry" the entry is stored, then the view jumps to the new entry.',
+      },
+      {
+        title: "4. View, edit and delete entries",
+        text: 'All entries are listed under "Daily entries". Choose "All" to see the entries of all hives, or a single hive. Use the pencil to edit an entry, the cross to delete it. Deleting is permanent.',
+      },
+      {
+        title: "5. Record a harvest",
+        text: 'Use "Log harvest" to enter your honey harvest. The field next to it shows the total for the year. Tap it to see the summary per hive.',
+      },
+      {
+        title: "6. Photo timeline",
+        text: "The photo timeline is switched off. Switch it on in the menu. A button then appears for each hive that shows all photos of that hive in time order.",
+      },
+      {
+        title: "7. Voice notes",
+        text: 'Switch on "Voice notes" in the menu. In a diary entry you can then record a note. You find the saved recordings per hive under "Saved voice notes". The first time, your device asks for microphone access.',
+      },
+      {
+        title: "8. Export",
+        text: 'The menu offers two PDF exports: "Export <hive name>" for the selected hive and "Export full report" for all hives. The single-hive export only appears when a hive is selected.',
+      },
+      {
+        title: "9. Without internet",
+        text: 'Without a connection isybee stores your entries on the device. A notice appears at the top. As soon as you are online again they are uploaded automatically, or you tap "Sync now". The green dot next to your name in the menu shows that you are online, a red one that you are offline.',
+      },
+      {
+        title: "10. Account, language and subscription",
+        text: "In the menu you switch the language (German or English) and the user. isybee is free for 30 days, then it costs €0.99 per month. You manage the subscription in the App Store, Google Play, or in the menu under \"Manage subscription\", depending on your device.",
+      },
+    ],
   },
   gettingStarted: {
     trigger: "How does isybee work?",
